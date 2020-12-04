@@ -1,0 +1,16 @@
+class Notification:
+    def __init__(self, **kwargs):
+        self.id = kwargs.get('notification_id')
+        self.message = kwargs.get('message')
+        self.bold_element = kwargs.get('bold_element')
+        self.community_id = kwargs.get('community_id')
+        self.community_name = kwargs.get('community_name')
+        self.contents_type = kwargs.get('contents_type')
+        self.contents_id = kwargs.get('contents_id')
+        self.notified_at = kwargs.get('notified_at')
+        self.icon_image_url = kwargs.get('icon_image_url')
+        self.thumbnail_image_url = kwargs.get('thumbnail_image_url')
+        self.artist_id = kwargs.get('artist_id')
+        self.is_membership_content = kwargs.get('is_membership_content')
+        self.is_web_only = kwargs.get('is_web_only')
+        self.platform = kwargs.get('platform')

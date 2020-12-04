@@ -1,0 +1,25 @@
+class Post:
+    def __init__(self, **kwargs):
+        self.id = kwargs.get('post_id')
+        self.community_tab_id = kwargs.get('community_tab_id')
+        self.type = kwargs.get('post_type')
+        self.body = kwargs.get('body')
+        self.comment_count = kwargs.get('comment_count')
+        self.like_count = kwargs.get('like_count')
+        self.max_comment_count = kwargs.get('max_comment_count')
+        self.has_my_like = kwargs.get('has_my_like')
+        self.has_my_bookmark = kwargs.get('has_my_bookmark')
+        self.created_at = kwargs.get('created_at')
+        self.updated_at = kwargs.get('updated_at')
+        self.is_locked = kwargs.get('is_locked')
+        self.is_blind = kwargs.get('is_blind')
+        self.is_active = kwargs.get('is_active')
+        self.is_private = kwargs.get('is_private')
+        self.photos = kwargs.get('photos')
+        self.is_hot_trending_post = kwargs.get('is_hot_trending_post')
+        self.is_limit_comment = kwargs.get('is_limit_comment')
+        self.artist_comments = kwargs.get('artist_comments')
+        self.community_artist_id = kwargs.get('community_artist_id')
+        self.artist_id = kwargs.get('artist_id')
+        self.artist = None
+
