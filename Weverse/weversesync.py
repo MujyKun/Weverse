@@ -62,6 +62,7 @@ class WeverseSync(Weverse):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
                 self.user_notifications = obj.create_notification_objects(response_text_as_dict.get('notifications'))
+                return self.user_notifications
 
     def check_new_user_notifications(self):
         """Returns true if there is a new user notification."""
