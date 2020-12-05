@@ -19,6 +19,7 @@ class WeverseSync(Weverse):
             self.get_user_notifications()
             for community in self.communities:
                 self.create_posts(community)
+            self.cache_loaded = True
         except Exception as err:
             raise err
 

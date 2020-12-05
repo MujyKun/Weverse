@@ -24,6 +24,7 @@ class WeverseAsync(Weverse):
             await self.get_user_notifications()
             for community in self.communities:
                 await self.create_posts(community)
+            self.cache_loaded = True
         except Exception as err:
             raise err
 
