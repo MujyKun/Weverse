@@ -18,6 +18,7 @@ class Weverse:
         self.api_all_artist_posts_url = "posts/artistTab/"  # Artist Feed from a community
         # endpoint for information about ALL communities and ALL idols.
         self.api_all_communities_info_url = self.api_communities_url + "info/"
+        self.cache_loaded = False
 
     def check_status(self, status, url):
         if status == 200:

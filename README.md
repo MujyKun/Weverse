@@ -83,10 +83,13 @@ Weverse is the client that contains all information and can be branched down to 
 
 Properties:
 -----------------------------------------
-communities -> list of communities (object) the user is in
+communities: list -> list of communities (object) the user is in
 -----------------------------------------
-user_notifications -> list of notifications (object) the user has.
+user_notifications: list -> list of notifications (object) the user has.
 -----------------------------------------
+cache_loaded: boolean ->  A check to see if the Weverse cache is loaded.
+-----------------------------------------
+
 
 Sub-Class Methods:
 
