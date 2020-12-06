@@ -101,3 +101,30 @@ class WeverseSync(Weverse):
                 response_text_as_dict = json.loads(response_text)
                 return response_text_as_dict.get('translation')
 
+    def create_to_fan_post(self, community_id, to_fan_id):
+        """Connects to a ToFan post (Basically a story) and returns a ToFan object. """
+        artist_tab_url = self.api_communities_url + str(community_id) + '/' + self.api_artist_to_fans + to_fan_id + '?pageSize=1'
+        with self.web_session.get(artist_tab_url, headers=self.headers) as resp:
+            if self.check_status(resp.status_code, artist_tab_url):
+                response_text = resp.text
+                response_text_as_dict = json.loads(response_text)
+                return obj.create_to_fan_post(response_text_as_dict.get('post'))
+
+    def fetch_artist_comments(self, community_id, post_id):
+        """Fetches the artist comments on a post."""
+        post_comments_url = self.api_communities_url + str(community_id) + '/posts/' + str(post_id) + "/comments/"
+        with self.web_session.get(post_comments_url, headers=self.headers) as resp:
+            if self.check_status(resp.status_code, post_comments_url):
+                response_text = resp.text
+                response_text_as_dict = json.loads(response_text)
+                return obj.create_comment_objects(response_text_as_dict.get('artistComments'))
+
+    def fetch_media(self, community_id, media_id):
+        """Receive media object based on media id."""
+        media_url = self.api_communities_url + str(community_id) + "/medias/" + str(media_id)
+        with self.web_session.get(media_url, headers=self.headers) as resp:
+            if self.check_status(resp.status_code, media_url):
+                response_text = resp.text
+                response_text_as_dict = json.loads(response_text)
+                return obj.create_media_object(response_text_as_dict.get('media'))
+
