@@ -141,6 +141,8 @@ get_photo_by_id(photo_id) -> get a photo object by the id
 -----------------------------------------
 get_community_by_id(community_id) -> get a community by the id
 -----------------------------------------
+get_media_by_id(media_id) -> get a media by the id
+-----------------------------------------
 process_community_artists_and_tabs(community, dict response from a connection) -> Processes community artists and tabs and adds them to their communities (should not be used unless making API calls yourself).
 -----------------------------------------
 determine_notification_type(notification_body) -> Returns string that says one of the following:

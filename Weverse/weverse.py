@@ -89,6 +89,11 @@ class Weverse:
             if community_id == community.id:
                 return community
 
+    def get_media_by_id(self, media_id):
+        for media in self.new_media:
+            if media.id == media_id:
+                return media
+
     @staticmethod
     def determine_notification_type(notification_body):
         """Determine the post type based on the notification body.
