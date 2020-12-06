@@ -143,17 +143,21 @@ class WeverseAsync(Weverse):
 
     async def update_cache_from_notification(self):
         try:
-            notification = (await self.get_user_notifications())[0]
+            notifications = await self.get_user_notifications()
+            if not notifications:
+                return
+            notification = notifications[0]
             noti_type = self.determine_notification_type(notification.message)
             community = self.get_community_by_id(notification.community_id)
             if noti_type == 'comment':
                 artist_comments = await self.fetch_artist_comments(notification.community_id, notification.contents_id)
-                comment = artist_comments[0]
-                comment.post = self.get_post_by_id(comment.post_id)
-                if comment.post.artist_comments:
-                    comment.post.artist_comments.insert(0, comment)
-                else:
-                    comment.post.artist_comments = [comment]
+                if artist_comments:
+                    comment = artist_comments[0]
+                    comment.post = self.get_post_by_id(comment.post_id)
+                    if comment.post.artist_comments:
+                        comment.post.artist_comments.insert(0, comment)
+                    else:
+                        comment.post.artist_comments = [comment]
             elif noti_type == 'tofans' or noti_type == "post":
                 await self.create_post(community, notification.contents_id)
             elif noti_type == 'media':
