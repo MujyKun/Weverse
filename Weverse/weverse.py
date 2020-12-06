@@ -20,6 +20,7 @@ class Weverse:
         # endpoint for information about ALL communities and ALL idols.
         self.api_all_communities_info_url = self.api_communities_url + "info/"
         self.cache_loaded = False
+        self.new_media = []  # We do not store ALL media objects as cache, so only when there are new media, we store it
 
     def check_status(self, status, url):
         if status == 200:
@@ -83,19 +84,24 @@ class Weverse:
                         if photo.id == photo_id:
                             return photo
 
+    def get_community_by_id(self, community_id):
+        for community in self.communities:
+            if community_id == community.id:
+                return community
+
     @staticmethod
     def determine_notification_type(notification_body):
         """Determine the post type based on the notification body.
         NOTE -> notifications don't usually say if they are comments. This is to differentiate Posts and Comments.
 
-        Returns comment, tofans, media, or post as a string.
+        Returns comment, media, or post as a string.
         """
 
         if "commented on" in notification_body:
             return "comment"
-        if "shared a moment with you" in notification_body:
-            return "tofans"
-        if "created a new post!" in notification_body:
+        # if "shared a moment with you" in notification_body:
+            # return "tofans"
+        if "created a new post!" in notification_body or "shared a moment with you" in notification_body:
             return "post"
         if "Check out the new media" in notification_body:
             return "media"
