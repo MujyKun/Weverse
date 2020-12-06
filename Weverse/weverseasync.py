@@ -91,7 +91,7 @@ class WeverseAsync(Weverse):
         elif comment:
             method_url = "posts/"
             p_obj = self.get_comment_by_id(post_or_comment_id)
-            comment_check = False
+            comment_check = True
         if p_obj:
             if comment_check:
                 community_id = p_obj.post.artist.community_id
