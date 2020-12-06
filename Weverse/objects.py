@@ -5,6 +5,7 @@ from Weverse.notification import Notification
 from Weverse.post import Post
 from Weverse.photo import Photo
 from Weverse.comment import Comment
+from Weverse.media import Media
 
 
 def create_community_objects(current_communities: list):
@@ -144,6 +145,23 @@ def create_post_objects(current_posts: list, community: Community):
     return posts
 
 
+def create_to_fan_post(post_info: dict):
+    if post_info:
+        kwargs = {
+            'post_id': post_info.get('id'),
+            'body': post_info.get('id'),
+            'has_my_like': post_info.get('hasMyLike'),
+            'community_tab_id': post_info.get('communityTabId'),
+            'post_type': post_info.get('type'),
+            'created_at': post_info.get('createdAt'),
+            'updated_at_at': post_info.get('updatedAt'),
+            'comment_count': post_info.get('commentCount'),
+            'like_count': post_info.get('likeCount'),
+        }
+        post_obj = Post(**kwargs)
+        return post_obj
+
+
 def create_photo_objects(current_photos: list):
     """Creates & Returns photo objects based on a list of photos"""
     photos = []
@@ -185,3 +203,8 @@ def create_comment_objects(current_comments: list):
             comments.append(comment_obj)
 
     return comments
+
+
+def create_media_object(media_info: dict):
+    """Creates and returns a media object"""
+    return Media(**media_info)
