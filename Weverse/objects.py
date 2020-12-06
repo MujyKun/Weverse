@@ -100,7 +100,7 @@ def create_notification_objects(current_notifications: list):
     return user_notifications
 
 
-def create_post_objects(current_posts: list, community: Community):
+def create_post_objects(current_posts: list, community: Community, new=False):
     """Creates post objects based on a list of posts sent in and the community and returns the objects."""
     posts = []
     if current_posts:
@@ -133,7 +133,10 @@ def create_post_objects(current_posts: list, community: Community):
                 'artist_comments': artist_comments
             }
             post_obj = Post(**kwargs)
-            posts.append(post_obj)
+            if new:
+                posts.insert(0, post_obj)
+            else:
+                posts.append(post_obj)
             for comment in artist_comments:
                 comment.post = post_obj
             for photo in artist_photos:
@@ -143,23 +146,6 @@ def create_post_objects(current_posts: list, community: Community):
                     artist.posts.append(post_obj)
                     post_obj.artist = artist
     return posts
-
-
-def create_to_fan_post(post_info: dict):
-    if post_info:
-        kwargs = {
-            'post_id': post_info.get('id'),
-            'body': post_info.get('id'),
-            'has_my_like': post_info.get('hasMyLike'),
-            'community_tab_id': post_info.get('communityTabId'),
-            'post_type': post_info.get('type'),
-            'created_at': post_info.get('createdAt'),
-            'updated_at_at': post_info.get('updatedAt'),
-            'comment_count': post_info.get('commentCount'),
-            'like_count': post_info.get('likeCount'),
-        }
-        post_obj = Post(**kwargs)
-        return post_obj
 
 
 def create_photo_objects(current_photos: list):
