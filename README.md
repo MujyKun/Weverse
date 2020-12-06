@@ -114,6 +114,10 @@ If it returns True, it is suggested to update the notification cache with get_us
 translate(post_or_comment_id, post=False, comment=False) -> Translates the body of a post or comment.
 Send in the post or comment id, then set if it is a post or comment to True. Returns translated text.
 -----------------------------------------
+create_to_fan_post(community_id, to_fan_post_id) -> Create a post object not stored in cache from a fan post id.
+-----------------------------------------
+fetch_artist_comments(comunity_id, post_id) -> Fetches the UPDATED artist comments on a post.
+-----------------------------------------
 
 Parent-Class Methods:
 -----------------------------------------
@@ -129,6 +133,10 @@ get_photo_by_id(photo_id) -> get a photo object by the id
 -----------------------------------------
 process_community_artists_and_tabs(community, dict response from a connection) -> Processes community artists and tabs and adds them to their communities (should not be used unless making API calls yourself).
 -----------------------------------------
+determine_notification_type(notification_body) -> Returns string that says one of the following:
+comment, tofans, post, or media.
+-----------------------------------------
+
 ```
 
 ### Community [Class Weverse.community.Community]
@@ -367,6 +375,36 @@ name: str -> Name of the tab
 -----------------------------------------
 ```
 
+### Media [Class Weverse.media.Media]
+```
+Contains Media Information
+Please Note that media information is not added to the internal cache. The media object is only given
+when using the fetch_media method. 
+
+Properties:
+-----------------------------------------
+id: int -> Media ID
+-----------------------------------------
+community_id: int -> Community ID
+-----------------------------------------
+body: str -> Media Body
+-----------------------------------------
+type: str -> Media Type
+-----------------------------------------
+thumbnail_path: str -> URL Thumbnail of media
+-----------------------------------------
+title: str -> Title of Media
+-----------------------------------------
+level: str -> Community Level to access post
+-----------------------------------------
+video_link: str -> External Link to video
+-----------------------------------------
+youtube_id: str -> Youtube ID of viedo
+-----------------------------------------
+```
+
+
+
 ### objects (This is the file name, not in a class) [File Weverse.objects]
 ```
 Creating Objects and sorting them properly as cache.
@@ -386,8 +424,12 @@ create_notification_objects(current_notifications)
 -----------------------------------------
 create_post_objects(current_posts, Community)
 -----------------------------------------
+create_to_fan_post(post_info: dict)
+-----------------------------------------
 create_photo_objects(current_photos)
 -----------------------------------------
 create_comment_objects(current_comments)
+-----------------------------------------
+create_media_object(media_info: dict)
 -----------------------------------------
 ```
