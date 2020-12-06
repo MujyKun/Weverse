@@ -89,6 +89,9 @@ user_notifications: list -> list of notifications (object) the user has.
 -----------------------------------------
 cache_loaded: boolean ->  A check to see if the Weverse cache is loaded.
 -----------------------------------------
+new_media: list -> list of medias (object) that were created from new notifications. 
+Note that not ALL media is stored as cache, so this is useful on new notifications.
+-----------------------------------------
 
 
 Sub-Class Methods:
@@ -106,6 +109,8 @@ create_community_artists_and_tabs() -> Creates the artist and tab objects of a c
 create_posts(community: Community, next_page_id: int = None) -> Pass in a Community object, no need to pass in a page id.
 The purpose of the page id is to paginate all posts when scrolling down the page. By default, recursion is used to create the posts.
 -----------------------------------------
+create_post(community: Community, post_id) -> Create an individual post and update the cache with it.
+-----------------------------------------
 get_user_notifications() -> Creates/Updates the cache for the user's notifications. 
 -----------------------------------------
 check_new_user_notifications() -> Checks if the user has a new notification. 
@@ -114,10 +119,13 @@ If it returns True, it is suggested to update the notification cache with get_us
 translate(post_or_comment_id, post=False, comment=False) -> Translates the body of a post or comment.
 Send in the post or comment id, then set if it is a post or comment to True. Returns translated text.
 -----------------------------------------
-create_to_fan_post(community_id, to_fan_post_id) -> Create a post object not stored in cache from a fan post id.
------------------------------------------
 fetch_artist_comments(comunity_id, post_id) -> Fetches the UPDATED artist comments on a post.
 -----------------------------------------
+fetch_media(community_id, media_id) -> receives a media object based on the media id
+-----------------------------------------
+update_cache_from_notification() -> Called by default after a new notification is found to update cache.
+-----------------------------------------
+
 
 Parent-Class Methods:
 -----------------------------------------
@@ -131,10 +139,12 @@ get_notification_by_id(notification_id) -> get a notification object by the id
 -----------------------------------------
 get_photo_by_id(photo_id) -> get a photo object by the id
 -----------------------------------------
+get_community_by_id(community_id) -> get a community by the id
+-----------------------------------------
 process_community_artists_and_tabs(community, dict response from a connection) -> Processes community artists and tabs and adds them to their communities (should not be used unless making API calls yourself).
 -----------------------------------------
 determine_notification_type(notification_body) -> Returns string that says one of the following:
-comment, tofans, post, or media.
+comment, post, or media.
 -----------------------------------------
 
 ```
