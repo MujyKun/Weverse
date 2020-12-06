@@ -16,6 +16,7 @@ class Weverse:
         # endpoint for checking new user notifications
         self.api_new_notifications_url = self.api_notifications_url + "has-new/"
         self.api_all_artist_posts_url = "posts/artistTab/"  # Artist Feed from a community
+        self.api_artist_to_fans = "posts/tofans/"
         # endpoint for information about ALL communities and ALL idols.
         self.api_all_communities_info_url = self.api_communities_url + "info/"
         self.cache_loaded = False
@@ -81,3 +82,25 @@ class Weverse:
                     for photo in post.photos:
                         if photo.id == photo_id:
                             return photo
+
+    @staticmethod
+    def determine_notification_type(notification_body):
+        """Determine the post type based on the notification body.
+        NOTE -> notifications don't usually say if they are comments. This is to differentiate Posts and Comments.
+
+        Returns comment, tofans, media, or post as a string.
+        """
+
+        if "commented on" in notification_body:
+            return "comment"
+        if "shared a moment with you" in notification_body:
+            return "tofans"
+        if "created a new post!" in notification_body:
+            return "post"
+        if "Check out the new media" in notification_body:
+            return "media"
+        if "New announcement" in notification_body:
+            return "announcement"
+
+
+
