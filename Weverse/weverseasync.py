@@ -85,11 +85,11 @@ class WeverseAsync(Weverse):
         community_id = None
         method_url = None
         if post:
-            method_url = "comments/"
+            method_url = "posts/"
             p_obj = self.get_post_by_id(post_or_comment_id)
             post_check = True
         elif comment:
-            method_url = "posts/"
+            method_url = "comments/"
             p_obj = self.get_comment_by_id(post_or_comment_id)
             comment_check = True
         if p_obj:
