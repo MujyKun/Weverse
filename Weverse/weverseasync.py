@@ -112,9 +112,11 @@ class WeverseAsync(Weverse):
             comment_check = True
         if p_obj:
             if comment_check:
-                community_id = p_obj.post.artist.community_id
+                if p_obj.post:
+                    community_id = p_obj.post.artist.community_id
             if post_check:
-                community_id = p_obj.artist.community_id
+                if p_obj.artist:
+                    community_id = p_obj.artist.community_id
         else:
             return None
         url = self.api_communities_url + str(community_id) + "/" + method_url + str(post_or_comment_id) + "/translate?languageCode=en"
