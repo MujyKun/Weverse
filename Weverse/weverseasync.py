@@ -94,7 +94,7 @@ class WeverseAsync(Weverse):
                     self.cache_loaded = True
                 return has_new
 
-    async def translate(self, post_or_comment_id, is_post=False, is_comment=False, p_obj=None):
+    async def translate(self, post_or_comment_id, is_post=False, is_comment=False, p_obj=None, community_id=None):
         """Translates a post or comment, must set post or comment to True."""
         post_check = False
         comment_check = False
@@ -110,15 +110,16 @@ class WeverseAsync(Weverse):
             if not p_obj:
                 p_obj = self.get_comment_by_id(post_or_comment_id)
             comment_check = True
-        if p_obj:
-            if comment_check:
-                if p_obj.post:
-                    community_id = p_obj.post.artist.community_id
-            if post_check:
-                if p_obj.artist:
-                    community_id = p_obj.artist.community_id
-        else:
-            return None
+        if not community_id:
+            if p_obj:
+                if comment_check:
+                    if p_obj.post:
+                        community_id = p_obj.post.artist.community_id
+                if post_check:
+                    if p_obj.artist:
+                        community_id = p_obj.artist.community_id
+            else:
+                return None
         url = self.api_communities_url + str(community_id) + "/" + method_url + str(post_or_comment_id) + "/translate?languageCode=en"
         async with self.web_session.get(url, headers=self.headers) as resp:
             if self.check_status(resp.status, url):
