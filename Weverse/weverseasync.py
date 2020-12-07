@@ -154,10 +154,11 @@ class WeverseAsync(Weverse):
                 if artist_comments:
                     comment = artist_comments[0]
                     comment.post = self.get_post_by_id(comment.post_id)
-                    if comment.post.artist_comments:
-                        comment.post.artist_comments.insert(0, comment)
-                    else:
-                        comment.post.artist_comments = [comment]
+                    if comment.post:
+                        if comment.post.artist_comments:
+                            comment.post.artist_comments.insert(0, comment)
+                        else:
+                            comment.post.artist_comments = [comment]
             elif noti_type == 'tofans' or noti_type == "post":
                 await self.create_post(community, notification.contents_id)
             elif noti_type == 'media':
@@ -167,6 +168,3 @@ class WeverseAsync(Weverse):
         except Exception as e:
             if self.verbose:
                 print(f"Failed to update Weverse Cache - {e}")
-
-
-
