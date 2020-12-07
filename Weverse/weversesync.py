@@ -89,21 +89,22 @@ class WeverseSync(Weverse):
                     self.cache_loaded = True
                 return has_new
 
-    def translate(self, post_or_comment_id, post=False, comment=False):
+    def translate(self, post_or_comment_id, is_post=False, is_comment=False, p_obj=None):
         """Translates a post or comment, must set post or comment to True."""
-        p_obj = None
         post_check = False
         comment_check = False
         community_id = None
         method_url = None
-        if post:
-            method_url = "comments/"
-            p_obj = self.get_post_by_id(post_or_comment_id)
-            post_check = True
-        elif comment:
+        if is_post:
             method_url = "posts/"
-            p_obj = self.get_comment_by_id(post_or_comment_id)
-            comment_check = False
+            if not p_obj:
+                p_obj = self.get_post_by_id(post_or_comment_id)
+            post_check = True
+        elif is_comment:
+            method_url = "comments/"
+            if not p_obj:
+                p_obj = self.get_comment_by_id(post_or_comment_id)
+            comment_check = True
         if p_obj:
             if comment_check:
                 community_id = p_obj.post.artist.community_id
