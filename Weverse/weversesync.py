@@ -93,7 +93,6 @@ class WeverseSync(Weverse):
         """Translates a post or comment, must set post or comment to True."""
         post_check = False
         comment_check = False
-        community_id = None
         method_url = None
         if is_post:
             method_url = "posts/"
