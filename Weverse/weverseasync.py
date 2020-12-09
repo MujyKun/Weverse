@@ -171,3 +171,7 @@ class WeverseAsync(Weverse):
         except Exception as e:
             if self.verbose:
                 print(f"Failed to update Weverse Cache - {e}")
+
+    async def check_token_works(self):
+        async with self.web_session.get(url=self.user_endpoint, headers=self.headers) as resp:
+            return resp.status == 200

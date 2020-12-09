@@ -21,6 +21,7 @@ class Weverse:
         self.api_all_communities_info_url = self.api_communities_url + "info/"
         self.cache_loaded = False
         self.new_media = []  # We do not store ALL media objects as cache, so only when there are new media, we store it
+        self.user_endpoint = "https://weversewebapi.weverse.io/wapi/v1/users/me"
 
     def check_status(self, status, url):
         if status == 200:

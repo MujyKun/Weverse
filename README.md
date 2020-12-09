@@ -125,6 +125,8 @@ fetch_media(community_id, media_id) -> receives a media object based on the medi
 -----------------------------------------
 update_cache_from_notification() -> Called by default after a new notification is found to update cache.
 -----------------------------------------
+check_token_works() -> Check if the token used in the instance is properly working.
+-----------------------------------------
 
 
 Parent-Class Methods:
