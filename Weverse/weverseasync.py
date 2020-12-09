@@ -62,7 +62,7 @@ class WeverseAsync(Weverse):
 
     async def create_post(self, community: Community, post_id):
         """Create a post and update the cache with it. This is meant for an individual post."""
-        post_url = self.api_communities_url + str(community.id) + '/posts/' + post_id
+        post_url = self.api_communities_url + str(community.id) + '/posts/' + str(post_id)
         async with self.web_session.get(post_url, headers=self.headers) as resp:
             if self.check_status(resp.status, post_url):
                 response_text = await resp.text()
