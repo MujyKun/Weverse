@@ -130,6 +130,15 @@ class WeverseSync(Weverse):
                 response_text_as_dict = json.loads(response_text)
                 return obj.create_comment_objects(response_text_as_dict.get('artistComments'))
 
+    def fetch_comment_body(self, community_id, comment_id):
+        """Fetches the artist comments on a post."""
+        comment_url = f"{self.api_communities_url}{str(community_id)}/comments/{comment_id}/"
+        with self.web_session.get(comment_url, headers=self.headers) as resp:
+            if self.check_status(resp.status_code, comment_url):
+                response_text = resp.text
+                response_text_as_dict = json.loads(response_text)
+                return response_text_as_dict.get('body')
+
     def fetch_media(self, community_id, media_id):
         """Receive media object based on media id."""
         media_url = self.api_communities_url + str(community_id) + "/medias/" + str(media_id)

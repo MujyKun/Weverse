@@ -121,6 +121,8 @@ Send in the post or comment id, then set if it is a post or comment to True. Ret
 -----------------------------------------
 fetch_artist_comments(comunity_id, post_id) -> Fetches the UPDATED artist comments on a post.
 -----------------------------------------
+fetch_comment_body(comunity_id, comment_id) -> Returns the body (str) of a comment.
+-----------------------------------------
 fetch_media(community_id, media_id) -> receives a media object based on the media id
 -----------------------------------------
 update_cache_from_notification() -> Called by default after a new notification is found to update cache.
