@@ -7,8 +7,8 @@ Weverse creates internal cache for the communities a user follows on [weverse.io
 
 * Asynchronous and Synchronous Support
 * Receive all the posts the artists in your communities have made. This includes all images/videos/comments made by them.
-* Cache is split under a hierarchy directly under a community. The most recent is always the first index.
-* Keep track of notifications on your user account, you can easily create a loop to update your notification cache on updates.
+* Cache is split under a hierarchy directly under a community. The most recent is always the first element (0th index).
+* Keep track of notifications on your user account, you can easily create a loop to update your notification cache on updates. [**Example of real usage**](https://github.com/MujyKun/IreneBot/blob/9193fcd3b6c73f61c57fb2fad557921141b1c07a/module/Weverse.py#L65)
 
 ### Installation
 
