@@ -1,9 +1,9 @@
 import aiohttp
 import json
-import Weverse.objects as obj
-from Weverse.community import Community
-from Weverse.weverse import Weverse
 from asyncio import get_event_loop
+
+from . import Community, Weverse, create_post_objects, create_community_objects, create_notification_objects, \
+    create_comment_objects, create_media_object
 
 
 class WeverseAsync(Weverse):
@@ -63,7 +63,7 @@ class WeverseAsync(Weverse):
                 response_text = await resp.text()
                 response_text_as_dict = json.loads(response_text)
                 user_communities = response_text_as_dict.get("communities")
-                self.all_communities = obj.create_community_objects(user_communities)
+                self.all_communities = create_community_objects(user_communities)
 
     async def create_community_artists_and_tabs(self):
         """Create the community artists and tabs and add them to their respective communities.
@@ -97,7 +97,7 @@ class WeverseAsync(Weverse):
             if self.check_status(resp.status, artist_tab_url):
                 response_text = await resp.text()
                 response_text_as_dict = json.loads(response_text)
-                posts = obj.create_post_objects(response_text_as_dict.get('posts'), community)
+                posts = create_post_objects(response_text_as_dict.get('posts'), community)
                 for post in posts:
                     self.all_posts[post.id] = post
                 if not response_text_as_dict.get('isEnded'):
@@ -116,7 +116,7 @@ class WeverseAsync(Weverse):
             if self.check_status(resp.status, post_url):
                 response_text = await resp.text()
                 response_text_as_dict = json.loads(response_text)
-                return (obj.create_post_objects([response_text_as_dict], community, new=True))[0]
+                return (create_post_objects([response_text_as_dict], community, new=True))[0]
 
     async def get_user_notifications(self):
         """Get a list of updated user notification objects.
@@ -129,7 +129,7 @@ class WeverseAsync(Weverse):
             if self.check_status(resp.status, self.api_notifications_url):
                 response_text = await resp.text()
                 response_text_as_dict = json.loads(response_text)
-                self.user_notifications = obj.create_notification_objects(response_text_as_dict.get('notifications'))
+                self.user_notifications = create_notification_objects(response_text_as_dict.get('notifications'))
                 for user_notification in self.user_notifications:
                     self.all_notifications[user_notification.id] = user_notification
                 return self.user_notifications
@@ -212,7 +212,7 @@ class WeverseAsync(Weverse):
             if self.check_status(resp.status, post_comments_url):
                 response_text = await resp.text()
                 response_text_as_dict = json.loads(response_text)
-                return obj.create_comment_objects(response_text_as_dict.get('artistComments'))
+                return create_comment_objects(response_text_as_dict.get('artistComments'))
 
     async def fetch_comment_body(self, community_id, comment_id):
         """Fetches a comment from its ID.
@@ -236,7 +236,7 @@ class WeverseAsync(Weverse):
         This is a coroutine and must be awaited.
 
         :parameter community_id: The ID of the community the media belongs to.
-        :parameter comment_id: The ID of the media to fetch.
+        :parameter media_id: The ID of the media to fetch.
         :returns: :ref:`Media` or NoneType
         """
         media_url = self.api_communities_url + str(community_id) + "/medias/" + str(media_id)
@@ -244,7 +244,7 @@ class WeverseAsync(Weverse):
             if self.check_status(resp.status, media_url):
                 response_text = await resp.text()
                 response_text_as_dict = json.loads(response_text)
-                return obj.create_media_object(response_text_as_dict.get('media'))
+                return create_media_object(response_text_as_dict.get('media'))
 
     async def update_cache_from_notification(self):
         """Grab a new post based from a notification and add it to cache.

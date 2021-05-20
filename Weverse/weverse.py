@@ -1,13 +1,11 @@
-import Weverse.error as error
-import Weverse.objects as obj
-from . import artist as w_artist, \
-    comment as w_comment, \
-    community as w_community, \
-    media as w_media, \
-    notification as w_notification,  \
-    photo as w_photo, \
-    post as w_post, \
-    tab as w_tab
+from . import Artist as w_Artist, \
+    Comment as w_Comment, \
+    community as w_Community, \
+    Media as w_Media, \
+    Notification as w_Notification,  \
+    Photo as w_Photo, \
+    Post as w_Post, \
+    Tab as w_Tab, create_artist_objects, create_tab_objects, InvalidToken
 
 
 class Weverse:
@@ -15,7 +13,7 @@ class Weverse:
     Abstract & Parent Client for connecting to Weverse and creating the internal cache.
 
     Do not create an object directly from this class.
-    Instead, create a :class:`Weverse.weversesync.WeverseSync` or :class:`Weverse.weverseasync.WeverseAsync`
+    Instead, create a :class:`Weverse.WeverseSync` or :class:`Weverse.WeverseAsync`
     object since those are concrete.
 
     Parameters
@@ -117,7 +115,7 @@ class Weverse:
         if status == 200:
             return True
         elif status == 401:
-            raise error.InvalidToken
+            raise InvalidToken
         elif status == 404:
             if self.verbose:
                 # raise error.PageNotFound
@@ -139,14 +137,14 @@ class Weverse:
         community_tabs = response_text_as_dict.get('tabs')
 
         # create artist and tab objects under the community
-        community.artists = obj.create_artist_objects(community_artists)
-        community.tabs = obj.create_tab_objects(community_tabs)
+        community.artists = create_artist_objects(community_artists)
+        community.tabs = create_tab_objects(community_tabs)
 
         # set the community for each artist
         for artist in community.artists:
             artist.community = community
 
-    def get_artist_by_id(self, artist_id) -> w_artist.Artist:
+    def get_artist_by_id(self, artist_id) -> w_Artist:
         """
         Get artist by their ID.
 
@@ -160,7 +158,7 @@ class Weverse:
                     artist = t_artist
         return artist
 
-    def get_tab_by_id(self, tab_id) -> w_tab.Tab:
+    def get_tab_by_id(self, tab_id) -> w_Tab:
         """
         Get tab by their ID.
 
@@ -169,7 +167,7 @@ class Weverse:
         """
         return self.all_tabs.get(tab_id)
 
-    def get_post_by_id(self, post_id) -> w_post.Post:
+    def get_post_by_id(self, post_id) -> w_Post:
         """
         Get a post by the ID
 
@@ -178,7 +176,7 @@ class Weverse:
         """
         return self.all_posts.get(post_id)
 
-    def get_comment_by_id(self, comment_id) -> w_comment.Comment:
+    def get_comment_by_id(self, comment_id) -> w_Comment:
         """
         Get a comment by the ID
         :param comment_id: Comment ID
@@ -186,7 +184,7 @@ class Weverse:
         """
         return self.all_comments.get(comment_id)
 
-    def get_notification_by_id(self, notification_id) -> w_notification.Notification:
+    def get_notification_by_id(self, notification_id) -> w_Notification:
         """
         Get a notification by the ID
 
@@ -195,7 +193,7 @@ class Weverse:
         """
         return self.all_notifications.get(notification_id)
 
-    def get_photo_by_id(self, photo_id) -> w_photo.Photo:
+    def get_photo_by_id(self, photo_id) -> w_Photo:
         """
         Get a photo by the ID
 
@@ -204,7 +202,7 @@ class Weverse:
         """
         return self.all_photos.get(photo_id)
 
-    def get_community_by_id(self, community_id) -> w_community.Community:
+    def get_community_by_id(self, community_id) -> w_Community:
         """
         Get a community by the ID.
 
@@ -213,7 +211,7 @@ class Weverse:
         """
         return self.all_communities.get(community_id)
 
-    def get_media_by_id(self, media_id) -> w_media.Media:
+    def get_media_by_id(self, media_id) -> w_Media:
         """
         Get Media by the ID
 

@@ -1,11 +1,11 @@
-from Weverse.community import Community
-from Weverse.artist import Artist
-from Weverse.tab import Tab
-from Weverse.notification import Notification
-from Weverse.post import Post
-from Weverse.photo import Photo
-from Weverse.comment import Comment
-from Weverse.media import Media
+from . import Community
+from . import Artist
+from . import Tab
+from . import Notification
+from . import Post
+from . import Photo
+from . import Comment
+from . import Media
 
 
 def create_community_objects(current_communities: list) -> dict:

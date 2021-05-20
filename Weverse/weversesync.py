@@ -1,9 +1,7 @@
 import json
 import requests
-import Weverse.objects as obj
-from Weverse.weverse import Weverse
-from Weverse.community import Community
-from . import post as w_post
+from . import Community, Weverse, create_post_objects, create_community_objects, create_notification_objects, \
+    create_comment_objects, create_media_object, Post as w_Post
 
 
 class WeverseSync(Weverse):
@@ -49,7 +47,7 @@ class WeverseSync(Weverse):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
                 user_communities = response_text_as_dict.get("communities")
-                self.all_communities = obj.create_community_objects(user_communities)
+                self.all_communities = create_community_objects(user_communities)
 
     def create_community_artists_and_tabs(self):
         """Create the community artists and tabs and add them to their respective communities."""
@@ -78,13 +76,13 @@ class WeverseSync(Weverse):
             if self.check_status(resp.status_code, artist_tab_url):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
-                posts = obj.create_post_objects(response_text_as_dict.get('posts'), community)
+                posts = create_post_objects(response_text_as_dict.get('posts'), community)
                 for post in posts:
                     self.all_posts[post.id] = post
                 if not response_text_as_dict.get('isEnded'):
                     self.create_posts(community, response_text_as_dict.get('lastId'))
 
-    def create_post(self, community: Community, post_id) -> w_post.Post:
+    def create_post(self, community: Community, post_id) -> w_Post:
         """Create a post and update the cache with it. This is meant for an individual post.
 
         :parameter community: :ref:`Community` the post was created under.
@@ -95,7 +93,7 @@ class WeverseSync(Weverse):
             if self.check_status(resp.status_code, post_url):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
-                return (obj.create_post_objects([response_text_as_dict], community, new=True))[0]
+                return (create_post_objects([response_text_as_dict], community, new=True))[0]
 
     def get_user_notifications(self):
         """Get a list of updated user notification objects.
@@ -106,7 +104,7 @@ class WeverseSync(Weverse):
             if self.check_status(resp.status_code, self.api_notifications_url):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
-                self.user_notifications = obj.create_notification_objects(response_text_as_dict.get('notifications'))
+                self.user_notifications = create_notification_objects(response_text_as_dict.get('notifications'))
                 for user_notification in self.user_notifications:
                     self.all_notifications[user_notification.id] = user_notification
                 return self.user_notifications
@@ -183,7 +181,7 @@ class WeverseSync(Weverse):
             if self.check_status(resp.status_code, post_comments_url):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
-                return obj.create_comment_objects(response_text_as_dict.get('artistComments'))
+                return create_comment_objects(response_text_as_dict.get('artistComments'))
 
     def fetch_comment_body(self, community_id, comment_id):
         """Fetches a comment from its ID.
@@ -203,7 +201,7 @@ class WeverseSync(Weverse):
         """Receive media object based on media id.
 
         :parameter community_id: The ID of the community the media belongs to.
-        :parameter comment_id: The ID of the media to fetch.
+        :parameter media_id: The ID of the media to fetch.
         :returns: :ref:`Media` or NoneType
         """
         media_url = self.api_communities_url + str(community_id) + "/medias/" + str(media_id)
@@ -211,7 +209,7 @@ class WeverseSync(Weverse):
             if self.check_status(resp.status_code, media_url):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
-                return obj.create_media_object(response_text_as_dict.get('media'))
+                return create_media_object(response_text_as_dict.get('media'))
 
     def update_cache_from_notification(self):
         """Grab a new post based from a notification and add it to cache."""
