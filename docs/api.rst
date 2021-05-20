@@ -73,7 +73,7 @@ Tab
 =========
 Media
 =========
-.. automodule:: Weverse.Media
+.. autoclass:: Weverse.Media
     :members:
 
 .. _obj_creation:
