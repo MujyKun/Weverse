@@ -3,7 +3,7 @@
 WeverseClient
 =============
 
-.. autoclass:: WeverseClient
+.. autoclass:: Weverse.WeverseClient
     :members:
 
 .. _clients_main:
