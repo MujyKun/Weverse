@@ -1,11 +1,9 @@
-..  currentmodule:: Weverse
-
 .. _weverse_main:
 
 Weverse
 =======
 
-.. autoclass:: Weverse
+.. autoclass:: Weverse.Weverse
     :members:
 
 .. _clients_main:
@@ -16,13 +14,13 @@ Clients
 ===========
 WeverseSync
 ===========
-.. autoclass:: WeverseSync
+.. autoclass:: Weverse.WeverseSync
     :members:
 
 ============
 WeverseAsync
 ============
-.. autoclass:: WeverseAsync
+.. autoclass:: Weverse.WeverseAsync
     :members:
 
 .. _obj_types:
@@ -33,56 +31,56 @@ Models
 =========
 Community
 =========
-.. autoclass:: models.Community
+.. autoclass:: Weverse.models.Community
     :members:
 
 ============
 Notification
 ============
-.. autoclass:: models.Notification
+.. autoclass:: Weverse.models.Notification
     :members:
 
 =========
 Photo
 =========
-.. autoclass:: models.Photo
+.. autoclass:: Weverse.models.Photo
     :members:
 
 =========
 Artist
 =========
-.. autoclass:: models.Artist
+.. autoclass:: Weverse.models.Artist
     :members:
 
 =========
 Comment
 =========
-.. autoclass:: models.Comment
+.. autoclass:: Weverse.models.Comment
     :members:
 
 =========
 Post
 =========
-.. autoclass:: models.Post
+.. autoclass:: Weverse.models.Post
     :members:
 
 =========
 Tab
 =========
-.. autoclass:: models.Tab
+.. autoclass:: Weverse.models.Tab
     :members:
 
 =========
 Media
 =========
-.. autoclass:: models.Media
+.. autoclass:: Weverse.models.Media
     :members:
 
 .. _obj_creation:
 
 Model Creation
 ===============
-.. automodule:: objects
+.. automodule:: Weverse.objects
     :members:
 
 .. _obj_exception:
@@ -95,19 +93,19 @@ Exceptions
 =============
 Invalid Token
 =============
-.. autoexception:: InvalidToken
+.. autoexception:: Weverse.InvalidToken
     :members:
 
 ==============
 Page Not Found
 ==============
-.. autoexception:: PageNotFound
+.. autoexception:: Weverse.PageNotFound
     :members:
 
 ==================
 Being Rate Limited
 ==================
-.. autoexception:: BeingRateLimited
+.. autoexception:: Weverse.BeingRateLimited
     :members:
 
 

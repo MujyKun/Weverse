@@ -10,10 +10,19 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+
+
+"""
+Due to very annoying issues, we will just reroute Sphinx to install the local dir as a package since it is a hassle
+to spend any more time on.
+
+In order to do this, we will have another requirements file, but inside the docs folder that will install
+the Weverse package.
+
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../Weverse'))
-
+"""
 
 # -- Project information -----------------------------------------------------
 
