@@ -7,11 +7,29 @@ from . import post as w_post
 
 
 class WeverseSync(Weverse):
+    r"""
+    Synchronous Weverse Client that Inherits from :ref:`Weverse`.
+
+    Parameters
+    ----------
+    kwargs:
+        Same as :ref:`Weverse`.
+
+
+    Attributes are the same as :ref:`Weverse`.
+    """
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def start(self):
-        """Creates internal cache."""
+        """Creates internal cache.
+
+        This is the main process that should be run.
+
+        :raises: :class:`Weverse.error.PageNotFound`
+        :raises: :class:`Weverse.error.InvalidToken`
+        :raises: :class:`Weverse.error.BeingRateLimited`
+        """
         try:
             if not self.web_session:
                 self.web_session = requests.Session()
@@ -48,7 +66,11 @@ class WeverseSync(Weverse):
                         self.all_tabs[tab.id] = tab
 
     def create_posts(self, community: Community, next_page_id: int = None):
-        """Paginate through a community's posts and add it to object cache."""
+        """Paginate through a community's posts and add it to object cache.
+
+        :parameter community: :ref:`Community` the posts exist under.
+        :parameter [OPTIONAL] next_page_id: Next Page ID (Weverse paginates posts).
+        """
         artist_tab_url = self.api_communities_url + str(community.id) + '/' + self.api_all_artist_posts_url
         if next_page_id:
             artist_tab_url = artist_tab_url + "?from=" + str(next_page_id)
@@ -63,7 +85,11 @@ class WeverseSync(Weverse):
                     self.create_posts(community, response_text_as_dict.get('lastId'))
 
     def create_post(self, community: Community, post_id) -> w_post.Post:
-        """Create a post and update the cache with it. This is meant for an individual post."""
+        """Create a post and update the cache with it. This is meant for an individual post.
+
+        :parameter community: :ref:`Community` the post was created under.
+        :parameter post_id: The id of the post we are needing to fetch.
+        """
         post_url = self.api_communities_url + str(community.id) + '/posts/' + str(post_id)
         with self.web_session.get(post_url, headers=self.headers) as resp:
             if self.check_status(resp.status_code, post_url):
@@ -72,7 +98,10 @@ class WeverseSync(Weverse):
                 return (obj.create_post_objects([response_text_as_dict], community, new=True))[0]
 
     def get_user_notifications(self):
-        """Get a list of updated user notification objects"""
+        """Get a list of updated user notification objects.
+
+        :returns: List[:ref:`Notification`]
+        """
         with self.web_session.get(self.api_notifications_url, headers=self.headers) as resp:
             if self.check_status(resp.status_code, self.api_notifications_url):
                 response_text = resp.text
@@ -83,7 +112,10 @@ class WeverseSync(Weverse):
                 return self.user_notifications
 
     def check_new_user_notifications(self):
-        """Returns true if there is a new user notification."""
+        """Checks if there is a new user notification, updates the cache, and returns if there was.
+
+        :returns: (:class:`bool`) Whether there is a new notification.
+        """
         with self.web_session.get(self.api_new_notifications_url, headers=self.headers) as resp:
             if self.check_status(resp.status_code, self.api_new_notifications_url):
                 response_text = resp.text
@@ -99,7 +131,15 @@ class WeverseSync(Weverse):
                 return has_new
 
     def translate(self, post_or_comment_id, is_post=False, is_comment=False, p_obj=None, community_id=None):
-        """Translates a post or comment, must set post or comment to True."""
+        """Translates a post or comment, must set post or comment to True.
+
+        :parameter post_or_comment_id: A post or comment ID.
+        :parameter [OPTIONAL] is_post: If we passed in a post.
+        :parameter [OPTIONAL] is_comment: If we passed in a comment
+        :parameter [OPTIONAL] p_obj: The object we are looking to translate
+        :parameter [OPTIONAL] community_id: The community id the post/comment was made under.
+        :returns: (:class:`str`) Translated message or NoneType
+        """
         post_check = False
         comment_check = False
         method_url = None
@@ -132,7 +172,12 @@ class WeverseSync(Weverse):
                 return response_text_as_dict.get('translation')
 
     def fetch_artist_comments(self, community_id, post_id):
-        """Fetches the artist comments on a post."""
+        """Fetches the artist comments on a post.
+
+        :parameter community_id: Community ID the post is on.
+        :parameter post_id: Post ID to fetch the artist comments of.
+        :returns: List[:ref:`Comment`]
+        """
         post_comments_url = self.api_communities_url + str(community_id) + '/posts/' + str(post_id) + "/comments/"
         with self.web_session.get(post_comments_url, headers=self.headers) as resp:
             if self.check_status(resp.status_code, post_comments_url):
@@ -141,7 +186,12 @@ class WeverseSync(Weverse):
                 return obj.create_comment_objects(response_text_as_dict.get('artistComments'))
 
     def fetch_comment_body(self, community_id, comment_id):
-        """Fetches the artist comments on a post."""
+        """Fetches a comment from its ID.
+
+        :parameter community_id: The ID of the community the comment belongs to.
+        :parameter comment_id: The ID of the comment to fetch.
+        :returns: (:class:`str`) Body of the comment.
+        """
         comment_url = f"{self.api_communities_url}{str(community_id)}/comments/{comment_id}/"
         with self.web_session.get(comment_url, headers=self.headers) as resp:
             if self.check_status(resp.status_code, comment_url):
@@ -150,7 +200,12 @@ class WeverseSync(Weverse):
                 return response_text_as_dict.get('body')
 
     def fetch_media(self, community_id, media_id):
-        """Receive media object based on media id."""
+        """Receive media object based on media id.
+
+        :parameter community_id: The ID of the community the media belongs to.
+        :parameter comment_id: The ID of the media to fetch.
+        :returns: :ref:`Media` or NoneType
+        """
         media_url = self.api_communities_url + str(community_id) + "/medias/" + str(media_id)
         with self.web_session.get(media_url, headers=self.headers) as resp:
             if self.check_status(resp.status_code, media_url):
@@ -194,7 +249,7 @@ class WeverseSync(Weverse):
         """
         Check if a token is invalid.
 
-        :return: returns True if the token works.
+        :returns: (:class:`bool`) True if the token works.
         """
         with self.web_session.get(url=self.user_endpoint, headers=self.headers) as resp:
             return resp.status_code == 200

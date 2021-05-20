@@ -12,11 +12,71 @@ from . import artist as w_artist, \
 
 class Weverse:
     """
-    Client for connecting to Weverse and creating the internal cache.
+    Abstract & Parent Client for connecting to Weverse and creating the internal cache.
 
     Do not create an object directly from this class.
-    Instead, create a WeverseSync or WeverseAsync object since those are concrete.
-    """
+    Instead, create a :class:`Weverse.weversesync.WeverseSync` or :class:`Weverse.weverseasync.WeverseAsync`
+    object since those are concrete.
+
+    Parameters
+    ----------
+    verbose: bool
+        Whether to print out verbose messages.
+    web_session:
+        An aiohttp or requests client session.
+    token:
+        The account token to connect to the Weverse API. In order to find your token, please refer to :ref:`account_token`
+
+    Attributes
+    -----------
+    verbose: bool
+        Whether to print out verbose messages.
+    web_session:
+        An aiohttp or requests client session.
+    token:
+        The account token to connect to the Weverse API. In order to find your token, please refer to :ref:`account_token`
+    user_notifications: list
+        Most recent notifications of the account connected.
+    headers: dict
+        API Header
+    api_url: str
+        URL to connect to the API
+    api_communities_url: str
+        Endpoint for communities
+    api_notifications_url: str
+        Endpoint for user notifications
+    api_new_notifications_url: str
+        Endpoint for checking new user notifications
+    api_all_artist_posts_url: str
+        Endpoint for getting the Artist Feed from a community
+    api_artist_to_fans: str
+        part of the endpoint (NOT FULL) for viewing the tofans posts.
+    api_all_communities_info_url: str
+        Endpoint for information about ALL communities and ALL idols.
+    cache_loaded: bool
+        Whether the Internal Weverse Cache is fully loaded.
+        This will change for a split moment when grabbing a new post.
+    new_media: list(Media)
+        We do not store ALL old media objects as cache, so only when there are new media, we store it
+    user_endpoint: str
+        User info endpoint.
+    all_posts: dict(Post)
+        All posts in cache where the dict of Post ID is the key, and the value being the Post Object
+    all_artists: dict(Artist)
+        All artists in cache where the dict of Artist ID is the key, and the value being the Artist Object
+    all_comments: dict(Comment)
+        All comments in cache where the dict of Comment ID is the key, and the value being the Comment Object
+    all_notifications: dict(Notification)
+        All notifications in cache where the dict of Notification ID is the key, and the value being the Notification Object
+    all_photos: dict(Photo)
+        All photos in cache where the dict of Photo ID is the key, and the value being the Photo Object
+    all_communities: dict(Community)
+        All communities in cache where the dict of Community ID is the key, and the value being the Community Object
+    all_media: dict(Media)
+        All media in cache where the dict of Media ID is the key, and the value being the Media Object
+    all_tabs: dict(Tab)
+         All tabs in cache where the dict of Tab ID is the key, and the value being the Tab Object
+   """
     def __init__(self, **kwargs):
         self.verbose = kwargs.get('verbose')
         self.web_session = kwargs.get('web_session')
@@ -52,7 +112,7 @@ class Weverse:
         :param status: Status code of url connection
         :param url: Link that we connected to.
         :return: True if the connection was a success.
-        :raises: error.InvalidToken if there was an invalid token.
+        :raises: :ref:`invalid_token_exc` if there was an invalid token.
         """
         if status == 200:
             return True
@@ -91,6 +151,7 @@ class Weverse:
         Get artist by their ID.
 
         :param artist_id: The artist's ID
+        :returns: :ref:`Artist` or NoneType
         """
         artist = self.all_artists.get(artist_id)
         if not artist:
@@ -104,6 +165,7 @@ class Weverse:
         Get tab by their ID.
 
         :param tab_id: The tab ID
+        :returns: :ref:`Tab` or NoneType
         """
         return self.all_tabs.get(tab_id)
 
@@ -112,6 +174,7 @@ class Weverse:
         Get a post by the ID
 
         :param post_id: Post ID
+        :returns: :ref:`Post` or NoneType
         """
         return self.all_posts.get(post_id)
 
@@ -119,6 +182,7 @@ class Weverse:
         """
         Get a comment by the ID
         :param comment_id: Comment ID
+        :returns: :ref:`Comment` or NoneType
         """
         return self.all_comments.get(comment_id)
 
@@ -127,6 +191,7 @@ class Weverse:
         Get a notification by the ID
 
         :param notification_id: Notification ID
+        :returns: :ref:`Notification` or NoneType
         """
         return self.all_notifications.get(notification_id)
 
@@ -135,6 +200,7 @@ class Weverse:
         Get a photo by the ID
 
         :param photo_id: Photo ID
+        :returns: :ref:`Photo` or NoneType
         """
         return self.all_photos.get(photo_id)
 
@@ -143,6 +209,7 @@ class Weverse:
         Get a community by the ID.
 
         :param community_id: Community ID
+        :returns: :ref:`Community` or NoneType
         """
         return self.all_communities.get(community_id)
 
@@ -151,6 +218,7 @@ class Weverse:
         Get Media by the ID
 
         :param media_id: Media ID
+        :returns: :ref:`Media` or NoneType
         """
         return self.all_media.get(media_id)
 
@@ -158,9 +226,12 @@ class Weverse:
     def determine_notification_type(notification_body) -> str:
         """
         Determine the post type based on the notification body.
-        NOTE: notifications don't usually say if they are comments. This is to differentiate Posts and Comments.
 
-        Returns comment, media, or post as a string.
+        Since notifications do not differentiate between Posts and Comments, this is for that purpose.
+
+        :param notification_body: The body of the notification.
+        :returns: A string with either
+            "comment", "media", or "post"
         """
 
         if "commented on" in notification_body:

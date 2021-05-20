@@ -9,7 +9,11 @@ from Weverse.media import Media
 
 
 def create_community_objects(current_communities: list) -> dict:
-    """Creates community objects based on a list of information sent in and returns the objects."""
+    """Creates community objects based on a list of information sent in and returns the objects.
+
+    :param current_communities: Community information received from endpoint.
+    :returns: dict{community id: :ref:`Community`}
+    """
     community_objects = {}
     if current_communities:
         for community in current_communities:
@@ -30,8 +34,12 @@ def create_community_objects(current_communities: list) -> dict:
     return community_objects
 
 
-def create_artist_objects(current_artists: list):
-    """Creates artist objects based on a list of information sent in and returns the objects."""
+def create_artist_objects(current_artists: list) -> list:
+    """Creates artist objects based on a list of information sent in and returns the objects.
+
+    :param current_artists: Artist information received from endpoint.
+    :returns: List[:ref:`Artist`]
+    """
     community_artists = []
     if current_artists:
         for artist in current_artists:
@@ -60,8 +68,12 @@ def create_artist_objects(current_artists: list):
     return community_artists
 
 
-def create_tab_objects(current_tabs: list):
-    """Creates tab objects based on a list of information sent in and returns the objects."""
+def create_tab_objects(current_tabs: list) -> list:
+    """Creates tab objects based on a list of information sent in and returns the objects.
+
+    :param current_tabs: Tab information received from endpoint.
+    :returns: List[:ref:`Tab`]
+    """
     community_tabs = []
     if current_tabs:
         for tab in current_tabs:
@@ -74,8 +86,12 @@ def create_tab_objects(current_tabs: list):
     return community_tabs
 
 
-def create_notification_objects(current_notifications: list):
-    """Creates notification objects based on a list of information sent in and returns the objects."""
+def create_notification_objects(current_notifications: list) -> list:
+    """Creates notification objects based on a list of information sent in and returns the objects.
+
+    :param current_notifications: Notification information received from endpoint.
+    :returns: List[:ref:`Notification`]
+    """
     user_notifications = []
     if current_notifications:
         for notification in current_notifications:
@@ -101,7 +117,13 @@ def create_notification_objects(current_notifications: list):
 
 
 def create_post_objects(current_posts: list, community: Community, new=False) -> list:
-    """Creates post objects based on a list of posts sent in and the community and returns the objects."""
+    """Creates post objects based on a list of posts sent in and the community and returns the objects.
+
+    :param current_posts: Post information received from endpoint.
+    :param community: :ref:`Community` that the post belongs in.
+    :param new: :class:`bool` Whether or not the post is new.
+    :returns: List[:ref:`Post`]
+    """
     posts = []
     if current_posts:
         for post in current_posts:
@@ -148,8 +170,12 @@ def create_post_objects(current_posts: list, community: Community, new=False) ->
     return posts
 
 
-def create_photo_objects(current_photos: list):
-    """Creates & Returns photo objects based on a list of photos"""
+def create_photo_objects(current_photos: list) -> list:
+    """Creates & Returns photo objects based on a list of photos
+
+    :param current_photos: photo information from endpoint.
+    :returns: List[:ref:`Photo`]
+    """
     photos = []
     if current_photos:
         for photo in current_photos:
@@ -169,8 +195,12 @@ def create_photo_objects(current_photos: list):
     return photos
 
 
-def create_comment_objects(current_comments: list):
-    """Creates & Returns comment objects based on a list of comments"""
+def create_comment_objects(current_comments: list) -> list:
+    """Creates & Returns comment objects based on a list of comments
+
+    :param current_comments: comment information from endpoint.
+    :returns: List[:ref:`Comment`]
+    """
     comments = []
     if current_comments:
         for comment in current_comments:
@@ -190,6 +220,10 @@ def create_comment_objects(current_comments: list):
 
     return comments
 
-def create_media_object(media_info: dict):
-    """Creates and returns a media object"""
+def create_media_object(media_info: dict) -> Media:
+    """Creates and returns a media object
+
+    :param media_info: media information from endpoint.
+    :returns: :ref:`Media`
+    """
     return Media(**media_info)

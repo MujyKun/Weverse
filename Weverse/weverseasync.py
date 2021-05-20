@@ -7,6 +7,25 @@ from asyncio import get_event_loop
 
 
 class WeverseAsync(Weverse):
+    r"""
+    Asynchronous Weverse Client that Inherits from :ref:`Weverse`.
+
+    Parameters
+    ----------
+    loop:
+        Asyncio Event Loop
+    kwargs:
+        Same as :ref:`Weverse`.
+
+
+    Attributes
+    -----------
+    loop:
+        Asyncio Event Loop
+
+    Attributes are the same as :ref:`Weverse`.
+    """
+
     def __init__(self, loop=get_event_loop(), **kwargs):
         self.loop = loop
         super().__init__(**kwargs)
@@ -15,6 +34,12 @@ class WeverseAsync(Weverse):
         """Creates internal cache.
 
         This is the main process that should be run.
+
+        This is a coroutine and must be awaited.
+
+        :raises: :class:`Weverse.error.PageNotFound`
+        :raises: :class:`Weverse.error.InvalidToken`
+        :raises: :class:`Weverse.error.BeingRateLimited`
         """
         try:
             if not self.web_session:
@@ -29,7 +54,10 @@ class WeverseAsync(Weverse):
             raise err
 
     async def create_communities(self):
-        """Get and Create the communities the logged in user has access to."""
+        """Get and Create the communities the logged in user has access to.
+
+        This is a coroutine and must be awaited.
+        """
         async with self.web_session.get(self.api_communities_url, headers=self.headers) as resp:
             if self.check_status(resp.status, self.api_communities_url):
                 response_text = await resp.text()
@@ -38,7 +66,10 @@ class WeverseAsync(Weverse):
                 self.all_communities = obj.create_community_objects(user_communities)
 
     async def create_community_artists_and_tabs(self):
-        """Create the community artists and tabs and add them to their respective communities."""
+        """Create the community artists and tabs and add them to their respective communities.
+
+        This is a coroutine and must be awaited.
+        """
         for community in self.all_communities.values():
             url = self.api_communities_url + str(community.id)
             async with self.web_session.get(url, headers=self.headers) as resp:
@@ -52,7 +83,13 @@ class WeverseAsync(Weverse):
                         self.all_tabs[tab.id] = tab
 
     async def create_posts(self, community: Community, next_page_id: int = None):
-        """Paginate through a community's posts and add it to object cache."""
+        """Paginate through a community's posts and add it to object cache.
+
+        This is a coroutine and must be awaited.
+
+        :parameter community: :ref:`Community` the posts exist under.
+        :parameter [OPTIONAL] next_page_id: Next Page ID (Weverse paginates posts).
+        """
         artist_tab_url = self.api_communities_url + str(community.id) + '/' + self.api_all_artist_posts_url
         if next_page_id:
             artist_tab_url = artist_tab_url + "?from=" + str(next_page_id)
@@ -67,7 +104,13 @@ class WeverseAsync(Weverse):
                     await self.create_posts(community, response_text_as_dict.get('lastId'))
 
     async def create_post(self, community: Community, post_id):
-        """Create a post and update the cache with it. This is meant for an individual post."""
+        """Create a post and update the cache with it. This is meant for an individual post.
+
+        This is a coroutine and must be awaited.
+
+        :parameter community: :ref:`Community` the post was created under.
+        :parameter post_id: The id of the post we are needing to fetch.
+        """
         post_url = self.api_communities_url + str(community.id) + '/posts/' + str(post_id)
         async with self.web_session.get(post_url, headers=self.headers) as resp:
             if self.check_status(resp.status, post_url):
@@ -76,7 +119,12 @@ class WeverseAsync(Weverse):
                 return (obj.create_post_objects([response_text_as_dict], community, new=True))[0]
 
     async def get_user_notifications(self):
-        """Get a list of updated user notification objects"""
+        """Get a list of updated user notification objects.
+
+        This is a coroutine and must be awaited.
+
+        :returns: List[:ref:`Notification`]
+        """
         async with self.web_session.get(self.api_notifications_url, headers=self.headers) as resp:
             if self.check_status(resp.status, self.api_notifications_url):
                 response_text = await resp.text()
@@ -86,8 +134,13 @@ class WeverseAsync(Weverse):
                     self.all_notifications[user_notification.id] = user_notification
                 return self.user_notifications
 
-    async def check_new_user_notifications(self):
-        """Returns if there is a new user notification. Also updates cache."""
+    async def check_new_user_notifications(self) -> bool:
+        """Checks if there is a new user notification, updates the cache, and returns if there was.
+
+        This is a coroutine and must be awaited.
+
+        :returns: (:class:`bool`) Whether there is a new notification.
+        """
         async with self.web_session.get(self.api_new_notifications_url, headers=self.headers) as resp:
             if self.check_status(resp.status, self.api_new_notifications_url):
                 response_text = await resp.text()
@@ -103,7 +156,17 @@ class WeverseAsync(Weverse):
                 return has_new
 
     async def translate(self, post_or_comment_id, is_post=False, is_comment=False, p_obj=None, community_id=None):
-        """Translates a post or comment, must set post or comment to True."""
+        """Translates a post or comment, must set post or comment to True.
+
+        This is a coroutine and must be awaited.
+
+        :parameter post_or_comment_id: A post or comment ID.
+        :parameter [OPTIONAL] is_post: If we passed in a post.
+        :parameter [OPTIONAL] is_comment: If we passed in a comment
+        :parameter [OPTIONAL] p_obj: The object we are looking to translate
+        :parameter [OPTIONAL] community_id: The community id the post/comment was made under.
+        :returns: (:class:`str`) Translated message or NoneType
+        """
         post_check = False
         comment_check = False
         method_url = None
@@ -136,7 +199,14 @@ class WeverseAsync(Weverse):
                 return response_text_as_dict.get('translation')
 
     async def fetch_artist_comments(self, community_id, post_id):
-        """Fetches the artist comments on a post."""
+        """Fetches the artist comments on a post.
+
+        This is a coroutine and must be awaited.
+
+        :parameter community_id: Community ID the post is on.
+        :parameter post_id: Post ID to fetch the artist comments of.
+        :returns: List[:ref:`Comment`]
+        """
         post_comments_url = self.api_communities_url + str(community_id) + '/posts/' + str(post_id) + "/comments/"
         async with self.web_session.get(post_comments_url, headers=self.headers) as resp:
             if self.check_status(resp.status, post_comments_url):
@@ -145,7 +215,14 @@ class WeverseAsync(Weverse):
                 return obj.create_comment_objects(response_text_as_dict.get('artistComments'))
 
     async def fetch_comment_body(self, community_id, comment_id):
-        """Fetches a comment from it's ID."""
+        """Fetches a comment from its ID.
+
+        This is a coroutine and must be awaited.
+
+        :parameter community_id: The ID of the community the comment belongs to.
+        :parameter comment_id: The ID of the comment to fetch.
+        :returns: (:class:`str`) Body of the comment.
+        """
         comment_url = f"{self.api_communities_url}{str(community_id)}/comments/{comment_id}/"
         async with self.web_session.get(comment_url, headers=self.headers) as resp:
             if self.check_status(resp.status, comment_url):
@@ -154,7 +231,14 @@ class WeverseAsync(Weverse):
                 return response_text_as_dict.get('body')
 
     async def fetch_media(self, community_id, media_id):
-        """Receive media object based on media id."""
+        """Receive media object based on media id.
+
+        This is a coroutine and must be awaited.
+
+        :parameter community_id: The ID of the community the media belongs to.
+        :parameter comment_id: The ID of the media to fetch.
+        :returns: :ref:`Media` or NoneType
+        """
         media_url = self.api_communities_url + str(community_id) + "/medias/" + str(media_id)
         async with self.web_session.get(media_url, headers=self.headers) as resp:
             if self.check_status(resp.status, media_url):
@@ -163,7 +247,10 @@ class WeverseAsync(Weverse):
                 return obj.create_media_object(response_text_as_dict.get('media'))
 
     async def update_cache_from_notification(self):
-        """Grab a new post based from a notification and add it to cache."""
+        """Grab a new post based from a notification and add it to cache.
+
+        This is a coroutine and must be awaited.
+        """
         try:
             notifications = await self.get_user_notifications()
             if not notifications:
@@ -201,7 +288,9 @@ class WeverseAsync(Weverse):
         """
         Check if a token is invalid.
 
-        :return: returns True if the token works.
+        This is a coroutine and must be awaited.
+
+        :returns: (:class:`bool`) True if the token works.
         """
         async with self.web_session.get(url=self.user_endpoint, headers=self.headers) as resp:
             return resp.status == 200
