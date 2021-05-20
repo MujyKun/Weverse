@@ -6,3 +6,6 @@ from .objects import create_tab_objects, create_community_objects, create_commen
 from .weverseclient import WeverseClient
 from .weversesync import WeverseClientSync
 from .weverseasync import WeverseClientAsync
+
+from . import weverseasync
+from . import weversesync
