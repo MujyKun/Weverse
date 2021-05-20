@@ -7,15 +7,15 @@ from . import WeverseClient, create_post_objects, create_community_objects, crea
 
 class WeverseClientSync(WeverseClient):
     r"""
-    Synchronous Weverse Client that Inherits from :ref:`Weverse`.
+    Synchronous Weverse Client that Inherits from :ref:`WeverseClient`.
 
     Parameters
     ----------
     kwargs:
-        Same as :ref:`Weverse`.
+        Same as :ref:`WeverseClient`.
 
 
-    Attributes are the same as :ref:`Weverse`.
+    Attributes are the same as :ref:`WeverseClient`.
     """
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

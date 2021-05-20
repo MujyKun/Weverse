@@ -9,7 +9,7 @@ class WeverseClient:
     Abstract & Parent Client for connecting to Weverse and creating the internal cache.
 
     Do not create an object directly from this class.
-    Instead, create a :class:`Weverse.WeverseSync` or :class:`Weverse.WeverseAsync`
+    Instead, create a :class:`Weverse.WeverseClientSync` or :class:`Weverse.WeverseClientAsync`
     object since those are concrete.
 
     Parameters

@@ -8,7 +8,7 @@ from . import WeverseClient, create_post_objects, create_community_objects, crea
 
 class WeverseClientAsync(WeverseClient):
     r"""
-    Asynchronous Weverse Client that Inherits from :ref:`Weverse`.
+    Asynchronous Weverse Client that Inherits from :ref:`WeverseClient`.
 
     Parameters
     ----------
@@ -23,7 +23,7 @@ class WeverseClientAsync(WeverseClient):
     loop:
         Asyncio Event Loop
 
-    Attributes are the same as :ref:`Weverse`.
+    Attributes are the same as :ref:`WeverseClient`.
     """
 
     def __init__(self, loop=get_event_loop(), **kwargs):
