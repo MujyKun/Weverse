@@ -93,7 +93,7 @@ Exceptions
 =============
 Invalid Token
 =============
-.. autoexception:: Weverse.InvalidToken
+.. autoexception:: InvalidToken
     :members:
 
 ==============
