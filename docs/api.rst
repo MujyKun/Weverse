@@ -31,49 +31,49 @@ Models
 =========
 Community
 =========
-.. autoclass:: Weverse.Community
+.. autoclass:: Weverse.models.Community
     :members:
 
 ============
 Notification
 ============
-.. autoclass:: Weverse.Notification
+.. autoclass:: Weverse.models.Notification
     :members:
 
 =========
 Photo
 =========
-.. autoclass:: Weverse.Photo
+.. autoclass:: Weverse.models.Photo
     :members:
 
 =========
 Artist
 =========
-.. autoclass:: Weverse.Artist
+.. autoclass:: Weverse.models.Artist
     :members:
 
 =========
 Comment
 =========
-.. autoclass:: Weverse.Comment
+.. autoclass:: Weverse.models.Comment
     :members:
 
 =========
 Post
 =========
-.. autoclass:: Weverse.Post
+.. autoclass:: Weverse.models.Post
     :members:
 
 =========
 Tab
 =========
-.. autoclass:: Weverse.Tab
+.. autoclass:: Weverse.models.Tab
     :members:
 
 =========
 Media
 =========
-.. autoclass:: Weverse.Media
+.. autoclass:: Weverse.models.Media
     :members:
 
 .. _obj_creation:

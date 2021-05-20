@@ -1,4 +1,4 @@
-import models
+from . import models
 
 from .error import InvalidToken, PageNotFound, BeingRateLimited
 from .objects import create_tab_objects, create_community_objects, create_comment_objects, create_notification_objects,\
