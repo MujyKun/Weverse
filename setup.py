@@ -12,7 +12,7 @@ def parse_requirements(filename):
 
 setup(
     name='Weverse',
-    version='1.0.0',
+    version='1.0.1',
     packages=find_packages(),
     install_requires=parse_requirements("requirements.txt"),
     url='https://github.com/MujyKun/Weverse/',
@@ -27,6 +27,6 @@ setup(
     ],
     long_description=long_description,
     long_description_content_type="text/markdown",
-    python_requires='>=2.7',
+    python_requires='>=3.5',
 
 )

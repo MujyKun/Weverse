@@ -8,9 +8,9 @@ from Weverse.comment import Comment
 from Weverse.media import Media
 
 
-def create_community_objects(current_communities: list):
+def create_community_objects(current_communities: list) -> dict:
     """Creates community objects based on a list of information sent in and returns the objects."""
-    community_objects = []
+    community_objects = {}
     if current_communities:
         for community in current_communities:
             kwargs = {
@@ -26,7 +26,7 @@ def create_community_objects(current_communities: list):
                 'show_member_count': community.get('showMemberCount')
             }
             community_object = Community(**kwargs)
-            community_objects.append(community_object)
+            community_objects[community_object.id] = community_object
     return community_objects
 
 
@@ -100,7 +100,7 @@ def create_notification_objects(current_notifications: list):
     return user_notifications
 
 
-def create_post_objects(current_posts: list, community: Community, new=False):
+def create_post_objects(current_posts: list, community: Community, new=False) -> list:
     """Creates post objects based on a list of posts sent in and the community and returns the objects."""
     posts = []
     if current_posts:

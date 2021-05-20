@@ -22,7 +22,7 @@ class WeverseAsync(Weverse):
             await self.create_communities()
             await self.create_community_artists_and_tabs()
             await self.get_user_notifications()
-            for community in self.communities:
+            for community in self.all_communities.values():
                 await self.create_posts(community)
             self.cache_loaded = True
         except Exception as err:
@@ -35,17 +35,21 @@ class WeverseAsync(Weverse):
                 response_text = await resp.text()
                 response_text_as_dict = json.loads(response_text)
                 user_communities = response_text_as_dict.get("communities")
-                self.communities = obj.create_community_objects(user_communities)
+                self.all_communities = obj.create_community_objects(user_communities)
 
     async def create_community_artists_and_tabs(self):
         """Create the community artists and tabs and add them to their respective communities."""
-        for community in self.communities:
+        for community in self.all_communities.values():
             url = self.api_communities_url + str(community.id)
             async with self.web_session.get(url, headers=self.headers) as resp:
                 if self.check_status(resp.status, url):
                     response_text = await resp.text()
                     response_text_as_dict = json.loads(response_text)
                     self.process_community_artists_and_tabs(community, response_text_as_dict)
+                    for artist in community.artists:
+                        self.all_artists[artist.id] = artist
+                    for tab in community.tabs:
+                        self.all_tabs[tab.id] = tab
 
     async def create_posts(self, community: Community, next_page_id: int = None):
         """Paginate through a community's posts and add it to object cache."""
@@ -56,7 +60,9 @@ class WeverseAsync(Weverse):
             if self.check_status(resp.status, artist_tab_url):
                 response_text = await resp.text()
                 response_text_as_dict = json.loads(response_text)
-                obj.create_post_objects(response_text_as_dict.get('posts'), community)
+                posts = obj.create_post_objects(response_text_as_dict.get('posts'), community)
+                for post in posts:
+                    self.all_posts[post.id] = post
                 if not response_text_as_dict.get('isEnded'):
                     await self.create_posts(community, response_text_as_dict.get('lastId'))
 
@@ -76,6 +82,8 @@ class WeverseAsync(Weverse):
                 response_text = await resp.text()
                 response_text_as_dict = json.loads(response_text)
                 self.user_notifications = obj.create_notification_objects(response_text_as_dict.get('notifications'))
+                for user_notification in self.user_notifications:
+                    self.all_notifications[user_notification.id] = user_notification
                 return self.user_notifications
 
     async def check_new_user_notifications(self):
@@ -119,7 +127,8 @@ class WeverseAsync(Weverse):
                         community_id = p_obj.artist.community_id
             else:
                 return None
-        url = self.api_communities_url + str(community_id) + "/" + method_url + str(post_or_comment_id) + "/translate?languageCode=en"
+        url = self.api_communities_url + str(community_id) + "/" + method_url + str(
+            post_or_comment_id) + "/translate?languageCode=en"
         async with self.web_session.get(url, headers=self.headers) as resp:
             if self.check_status(resp.status, url):
                 response_text = await resp.text()
@@ -154,14 +163,15 @@ class WeverseAsync(Weverse):
                 return obj.create_media_object(response_text_as_dict.get('media'))
 
     async def update_cache_from_notification(self):
+        """Grab a new post based from a notification and add it to cache."""
         try:
             notifications = await self.get_user_notifications()
             if not notifications:
                 return
             notification = notifications[0]
-            noti_type = self.determine_notification_type(notification.message)
+            notification_type = self.determine_notification_type(notification.message)
             community = self.get_community_by_id(notification.community_id)
-            if noti_type == 'comment':
+            if notification_type == 'comment':
                 artist_comments = await self.fetch_artist_comments(notification.community_id, notification.contents_id)
                 if artist_comments:
                     comment = artist_comments[0]
@@ -171,16 +181,27 @@ class WeverseAsync(Weverse):
                             comment.post.artist_comments.insert(0, comment)
                         else:
                             comment.post.artist_comments = [comment]
-            elif noti_type == 'tofans' or noti_type == "post":
-                await self.create_post(community, notification.contents_id)
-            elif noti_type == 'media':
-                self.new_media.insert(0, await self.fetch_media(community.id, notification.contents_id))
-            elif noti_type == 'announcement':
+                    self.all_comments[comment.id] = comment
+            elif notification_type in ["tofans", "post"]:
+                post = await self.create_post(community, notification.contents_id)
+                if post:
+                    self.all_posts[post.id] = post
+            elif notification_type == 'media':
+                media = await self.fetch_media(community.id, notification.contents_id)
+                if media:
+                    self.new_media.insert(0, media)
+                    self.all_media[media.id] = media
+            elif notification_type == 'announcement':
                 return  # not keeping track of announcements in cache ATM
         except Exception as e:
             if self.verbose:
                 print(f"Failed to update Weverse Cache - {e}")
 
-    async def check_token_works(self):
+    async def check_token_works(self) -> bool:
+        """
+        Check if a token is invalid.
+
+        :return: returns True if the token works.
+        """
         async with self.web_session.get(url=self.user_endpoint, headers=self.headers) as resp:
             return resp.status == 200

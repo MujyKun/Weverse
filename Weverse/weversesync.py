@@ -3,6 +3,7 @@ import requests
 import Weverse.objects as obj
 from Weverse.weverse import Weverse
 from Weverse.community import Community
+from . import post as w_post
 
 
 class WeverseSync(Weverse):
@@ -17,7 +18,7 @@ class WeverseSync(Weverse):
             self.create_communities()
             self.create_community_artists_and_tabs()
             self.get_user_notifications()
-            for community in self.communities:
+            for community in self.all_communities.values():
                 self.create_posts(community)
             self.cache_loaded = True
         except Exception as err:
@@ -30,17 +31,21 @@ class WeverseSync(Weverse):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
                 user_communities = response_text_as_dict.get("communities")
-                self.communities = obj.create_community_objects(user_communities)
+                self.all_communities = obj.create_community_objects(user_communities)
 
     def create_community_artists_and_tabs(self):
         """Create the community artists and tabs and add them to their respective communities."""
-        for community in self.communities:
+        for community in self.all_communities.values():
             url = self.api_communities_url + str(community.id)
             with self.web_session.get(url, headers=self.headers) as resp:
                 if self.check_status(resp.status_code, url):
                     response_text = resp.text
                     response_text_as_dict = json.loads(response_text)
                     self.process_community_artists_and_tabs(community, response_text_as_dict)
+                    for artist in community.artists:
+                        self.all_artists[artist.id] = artist
+                    for tab in community.tabs:
+                        self.all_tabs[tab.id] = tab
 
     def create_posts(self, community: Community, next_page_id: int = None):
         """Paginate through a community's posts and add it to object cache."""
@@ -51,11 +56,13 @@ class WeverseSync(Weverse):
             if self.check_status(resp.status_code, artist_tab_url):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
-                obj.create_post_objects(response_text_as_dict.get('posts'), community)
+                posts = obj.create_post_objects(response_text_as_dict.get('posts'), community)
+                for post in posts:
+                    self.all_posts[post.id] = post
                 if not response_text_as_dict.get('isEnded'):
                     self.create_posts(community, response_text_as_dict.get('lastId'))
 
-    def create_post(self, community: Community, post_id):
+    def create_post(self, community: Community, post_id) -> w_post.Post:
         """Create a post and update the cache with it. This is meant for an individual post."""
         post_url = self.api_communities_url + str(community.id) + '/posts/' + str(post_id)
         with self.web_session.get(post_url, headers=self.headers) as resp:
@@ -71,6 +78,8 @@ class WeverseSync(Weverse):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
                 self.user_notifications = obj.create_notification_objects(response_text_as_dict.get('notifications'))
+                for user_notification in self.user_notifications:
+                    self.all_notifications[user_notification.id] = user_notification
                 return self.user_notifications
 
     def check_new_user_notifications(self):
@@ -114,7 +123,8 @@ class WeverseSync(Weverse):
                         community_id = p_obj.artist.community_id
             else:
                 return None
-        url = self.api_communities_url + str(community_id) + "/" + method_url + str(post_or_comment_id) + "/translate?languageCode=en"
+        url = self.api_communities_url + str(community_id) + "/" + method_url + str(
+            post_or_comment_id) + "/translate?languageCode=en"
         with self.web_session.get(url, headers=self.headers) as resp:
             if self.check_status(resp.status_code, url):
                 response_text = resp.text
@@ -149,28 +159,42 @@ class WeverseSync(Weverse):
                 return obj.create_media_object(response_text_as_dict.get('media'))
 
     def update_cache_from_notification(self):
+        """Grab a new post based from a notification and add it to cache."""
         try:
             notification = (self.get_user_notifications())[0]
-            noti_type = self.determine_notification_type(notification.message)
+            notification_type = self.determine_notification_type(notification.message)
             community = self.get_community_by_id(notification.community_id)
-            if noti_type == 'comment':
+            if notification_type == 'comment':
                 artist_comments = self.fetch_artist_comments(notification.community_id, notification.contents_id)
                 comment = artist_comments[0]
                 comment.post = self.get_post_by_id(comment.post_id)
-                if comment.post.artist_comments:
-                    comment.post.artist_comments.insert(0, comment)
-                else:
-                    comment.post.artist_comments = [comment]
-            elif noti_type == "post":
-                self.create_post(community, notification.contents_id)
-            elif noti_type == 'media':
-                self.new_media.insert(0, self.fetch_media(community.id, notification.contents_id))
-            elif noti_type == 'announcement':
+                if comment.post:
+                    if comment.post.artist_comments:
+                        comment.post.artist_comments.insert(0, comment)
+                    else:
+                        comment.post.artist_comments = [comment]
+                self.all_comments[comment.id] = comment
+
+            elif notification_type in ["tofans", "post"]:
+                post = self.create_post(community, notification.contents_id)
+                if post:
+                    self.all_posts[post.id] = post
+            elif notification_type == 'media':
+                media = self.fetch_media(community.id, notification.contents_id)
+                if media:
+                    self.new_media.insert(0, media)
+                    self.all_media[media.id] = media
+            elif notification_type == 'announcement':
                 return  # not keeping track of announcements in cache ATM
         except Exception as e:
             if self.verbose:
                 print(f"Failed to update Weverse Cache - {e}")
 
     def check_token_works(self):
+        """
+        Check if a token is invalid.
+
+        :return: returns True if the token works.
+        """
         with self.web_session.get(url=self.user_endpoint, headers=self.headers) as resp:
             return resp.status_code == 200
