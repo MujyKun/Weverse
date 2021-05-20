@@ -1,11 +1,4 @@
-from . import Community
-from . import Artist
-from . import Tab
-from . import Notification
-from . import Post
-from . import Photo
-from . import Comment
-from . import Media
+from .models import Community, Artist, Tab, Notification, Post, Photo, Comment, Media
 
 
 def create_community_objects(current_communities: list) -> dict:

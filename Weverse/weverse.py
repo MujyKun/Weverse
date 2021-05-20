@@ -1,11 +1,7 @@
-from . import Artist as w_Artist, \
-    Comment as w_Comment, \
-    community as w_Community, \
-    Media as w_Media, \
-    Notification as w_Notification,  \
-    Photo as w_Photo, \
-    Post as w_Post, \
-    Tab as w_Tab, create_artist_objects, create_tab_objects, InvalidToken
+from . import create_artist_objects, create_tab_objects, InvalidToken
+from .models import Artist as w_Artist, \
+    Comment as w_Comment, Media as w_Media, Notification as w_Notification, Photo as w_Photo, Post as w_Post, \
+    Tab as w_Tab, Community as w_Community
 
 
 class Weverse:

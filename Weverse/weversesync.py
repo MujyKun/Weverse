@@ -1,7 +1,8 @@
 import json
 import requests
-from . import Community, Weverse, create_post_objects, create_community_objects, create_notification_objects, \
-    create_comment_objects, create_media_object, Post as w_Post
+from .models import Community, Post as w_Post
+from . import Weverse, create_post_objects, create_community_objects, create_notification_objects, \
+    create_comment_objects, create_media_object
 
 
 class WeverseSync(Weverse):

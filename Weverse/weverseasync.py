@@ -1,8 +1,8 @@
 import aiohttp
 import json
 from asyncio import get_event_loop
-
-from . import Community, Weverse, create_post_objects, create_community_objects, create_notification_objects, \
+from .models import Community, Post as w_Post
+from . import Weverse, create_post_objects, create_community_objects, create_notification_objects, \
     create_comment_objects, create_media_object
 
 
@@ -103,7 +103,7 @@ class WeverseAsync(Weverse):
                 if not response_text_as_dict.get('isEnded'):
                     await self.create_posts(community, response_text_as_dict.get('lastId'))
 
-    async def create_post(self, community: Community, post_id):
+    async def create_post(self, community: Community, post_id) -> w_Post:
         """Create a post and update the cache with it. This is meant for an individual post.
 
         This is a coroutine and must be awaited.
