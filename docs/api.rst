@@ -1,4 +1,4 @@
-.. automodule:: Weverse
+..  currentmodule:: Weverse
 
 .. _weverse_main:
 
