@@ -1,2 +1,13 @@
-from Weverse import artist, comment, community, error, notification, objects, photo, post, tab, weverse, media,\
-    weversesync, weverseasync
+from .artist import *
+from .comment import *
+from .community import *
+from .error import *
+from .notification import *
+from .objects import *
+from .photo import *
+from .post import *
+from .tab import *
+from .weverse import *
+from .media import *
+from .weversesync import *
+from .weverseasync import *
