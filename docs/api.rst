@@ -1,3 +1,6 @@
+.. automodule:: Weverse
+    :members:
+
 .. _weverse_main:
 
 Weverse
