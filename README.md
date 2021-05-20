@@ -33,6 +33,7 @@ It is suggested to have the auth token as an environment variable.
 
 
 #### CODE EXAMPLES
+
 ```python
 
 
@@ -40,12 +41,13 @@ It is suggested to have the auth token as an environment variable.
 import asyncio
 import aiohttp
 from Weverse.error import InvalidToken
-from Weverse.weverseasync import WeverseAsync
+from Weverse.weverseasync import WeverseClientAsync
 
 token = "fake_token"  # REQUIRED
 # It is advised to pass in your own web session as it is not closed in Weverse 
 web_session = aiohttp.ClientSession()  # A session is created by default 
-weverse_client = WeverseAsync(authorization=token, verbose=True, loop=asyncio.get_event_loop(), web_session=web_session)
+weverse_client = WeverseClientAsync(authorization=token, verbose=True, loop=asyncio.get_event_loop(),
+                                    web_session=web_session)
 try:
     await weverse_client.start()  # creates all the cache needed for your account.
 except InvalidToken:
@@ -53,13 +55,13 @@ except InvalidToken:
 
 # Synchronous
 import requests
-from Weverse.weversesync import WeverseSync
+from Weverse.weversesync import WeverseClientSync
 from Weverse.error import InvalidToken
 
 token = "fake_token"  # REQUIRED
 # It is advised to pass in your own web session as it is not closed in Weverse
 web_session = requests.Session()  # A session is created by default 
-weverse_client = WeverseSync(authorization=token, verbose=True)
+weverse_client = WeverseClientSync(authorization=token, verbose=True)
 try:
     weverse_client.start()  # creates all the cache needed for your account.
 except InvalidToken:

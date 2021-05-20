@@ -1,9 +1,9 @@
 .. _weverse_main:
 
-Weverse
-=======
+WeverseClient
+=============
 
-.. autoclass:: Weverse.Weverse
+.. autoclass:: Weverse.WeverseClient
     :members:
 
 .. _clients_main:

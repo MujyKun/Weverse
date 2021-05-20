@@ -2,11 +2,11 @@ import aiohttp
 import json
 from asyncio import get_event_loop
 from .models import Community, Post as w_Post
-from . import Weverse, create_post_objects, create_community_objects, create_notification_objects, \
+from . import WeverseClient, create_post_objects, create_community_objects, create_notification_objects, \
     create_comment_objects, create_media_object
 
 
-class WeverseAsync(Weverse):
+class WeverseClientAsync(WeverseClient):
     r"""
     Asynchronous Weverse Client that Inherits from :ref:`Weverse`.
 

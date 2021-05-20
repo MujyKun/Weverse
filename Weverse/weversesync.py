@@ -1,11 +1,11 @@
 import json
 import requests
 from .models import Community, Post as w_Post
-from . import Weverse, create_post_objects, create_community_objects, create_notification_objects, \
+from . import WeverseClient, create_post_objects, create_community_objects, create_notification_objects, \
     create_comment_objects, create_media_object
 
 
-class WeverseSync(Weverse):
+class WeverseClientSync(WeverseClient):
     r"""
     Synchronous Weverse Client that Inherits from :ref:`Weverse`.
 

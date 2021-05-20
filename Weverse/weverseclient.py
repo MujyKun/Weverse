@@ -4,7 +4,7 @@ from .models import Artist as w_Artist, \
     Tab as w_Tab, Community as w_Community
 
 
-class Weverse:
+class WeverseClient:
     """
     Abstract & Parent Client for connecting to Weverse and creating the internal cache.
 
