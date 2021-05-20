@@ -3,7 +3,7 @@
 Weverse
 =======
 
-.. autoclass:: Weverse.weverse.Weverse
+.. autoclass:: weverse.Weverse
     :members:
 
 .. _clients_main:
@@ -14,13 +14,13 @@ Clients
 ===========
 WeverseSync
 ===========
-.. autoclass:: Weverse.weversesync.WeverseSync
+.. autoclass:: weversesync.WeverseSync
     :members:
 
 ============
 WeverseAsync
 ============
-.. autoclass:: Weverse.weverseasync.WeverseAsync
+.. autoclass:: weverseasync.WeverseAsync
     :members:
 
 .. _obj_types:
@@ -31,56 +31,56 @@ Models
 =========
 Community
 =========
-.. autoclass:: Weverse.community.Community
+.. autoclass:: community.Community
     :members:
 
 ============
 Notification
 ============
-.. autoclass:: Weverse.notification.Notification
+.. autoclass:: notification.Notification
     :members:
 
 =========
 Photo
 =========
-.. autoclass:: Weverse.photo.Photo
+.. autoclass:: photo.Photo
     :members:
 
 =========
 Artist
 =========
-.. autoclass:: Weverse.artist.Artist
+.. autoclass:: artist.Artist
     :members:
 
 =========
 Comment
 =========
-.. autoclass:: Weverse.comment.Comment
+.. autoclass:: comment.Comment
     :members:
 
 =========
 Post
 =========
-.. autoclass:: Weverse.post.Post
+.. autoclass:: post.Post
     :members:
 
 =========
 Tab
 =========
-.. autoclass:: Weverse.tab.Tab
+.. autoclass:: tab.Tab
     :members:
 
 =========
 Media
 =========
-.. autoclass:: Weverse.media.Media
+.. autoclass:: media.Media
     :members:
 
 .. _obj_creation:
 
 Model Creation
 ===============
-.. automodule:: Weverse.objects
+.. automodule:: objects
     :members:
 
 .. _obj_exception:
@@ -93,19 +93,19 @@ Exceptions
 =============
 Invalid Token
 =============
-.. autoexception:: Weverse.error.InvalidToken
+.. autoexception:: error.InvalidToken
     :members:
 
 ==============
 Page Not Found
 ==============
-.. autoexception:: Weverse.error.PageNotFound
+.. autoexception:: error.PageNotFound
     :members:
 
 ==================
 Being Rate Limited
 ==================
-.. autoexception:: Weverse.error.BeingRateLimited
+.. autoexception:: error.BeingRateLimited
     :members:
 
 
