@@ -65,10 +65,7 @@ try:
 except InvalidToken:
     print("Invalid Token")
 
-"""
-After using the start method, you now have all the objects you would want to modify.
-I'm too lazy to make an official docs page, so I will just list the IMPORTANT Classes, Objects, and their properties/methods below.
-"""
+# After calling the start method, you now have all the objects you would want to modify.
 
 ```
 
