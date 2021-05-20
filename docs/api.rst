@@ -16,13 +16,13 @@ Clients
 ===========
 WeverseSync
 ===========
-.. autoclass:: Weverse.WeverseSync
+.. autoclass:: Weverse.weversesync.WeverseSync
     :members:
 
 ============
 WeverseAsync
 ============
-.. autoclass:: Weverse.WeverseAsync
+.. autoclass:: Weverse.weverseasync.WeverseAsync
     :members:
 
 .. _obj_types:
