@@ -1,3 +1,5 @@
+.. automodule:: Weverse
+
 .. _weverse_main:
 
 Weverse
