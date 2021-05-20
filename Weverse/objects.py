@@ -213,6 +213,7 @@ def create_comment_objects(current_comments: list) -> list:
 
     return comments
 
+
 def create_media_object(media_info: dict) -> Media:
     """Creates and returns a media object
 
