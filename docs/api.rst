@@ -1,6 +1,3 @@
-.. automodule:: Weverse
-    :members:
-
 .. _weverse_main:
 
 Weverse
@@ -76,7 +73,7 @@ Tab
 =========
 Media
 =========
-.. autoclass:: Weverse.Media
+.. automodule:: Weverse.Media
     :members:
 
 .. _obj_creation:
