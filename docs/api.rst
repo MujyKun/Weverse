@@ -1,3 +1,5 @@
+.. py:currentmodule:: Weverse
+
 .. _weverse_main:
 
 WeverseClient
