@@ -2,6 +2,7 @@
 
 ### What is it?
 Weverse creates internal cache for the communities a user follows on [weverse.io](https://www.weverse.io/).  
+This is a **wrapper** for Weverse's private API, but will be referred to as an API on this repository.
 
 ### **[API Documentation](https://weverse.readthedocs.io/en/latest/)**
 
@@ -70,6 +71,8 @@ except InvalidToken:
     print("Invalid Token")
 
 # After calling the start method, you now have all the objects you would want to modify.
+# The start method takes in parameters that can disable old posts from loading up 
+# if only the newer posts are wanted. More info on the documentation.
 
 ```
 

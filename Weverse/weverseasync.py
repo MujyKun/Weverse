@@ -23,7 +23,6 @@ class WeverseClientAsync(WeverseClient):
     loop:
         Asyncio Event Loop
 
-
     Attributes are the same as :ref:`WeverseClient`.
     """
 
@@ -31,12 +30,15 @@ class WeverseClientAsync(WeverseClient):
         self.loop = loop
         super().__init__(**kwargs)
 
-    async def start(self):
+    async def start(self, create_old_posts=True, create_notifications=True):
         """Creates internal cache.
 
         This is the main process that should be run.
 
         This is a coroutine and must be awaited.
+
+        :parameter create_old_posts: (:class:`bool`) Whether to create cache for old posts.
+        :parameter create_notifications: (:class:`bool`) Whether to create/update cache for old notifications.
 
         :raises: :class:`Weverse.error.PageNotFound`
         :raises: :class:`Weverse.error.InvalidToken`
@@ -45,11 +47,22 @@ class WeverseClientAsync(WeverseClient):
         try:
             if not self.web_session:
                 self.web_session = aiohttp.ClientSession()
-            await self.create_communities()
+
+            # create all communities that are subscribed to
+            await self.create_communities()  # communities should be created no matter what
+
+            # create and update community artists and their tabs
             await self.create_community_artists_and_tabs()
-            await self.get_user_notifications()
-            for community in self.all_communities.values():
-                await self.create_posts(community)
+
+            # create and update user notifications
+            if create_notifications:
+                await self.get_user_notifications()
+
+            # load up posts
+            if create_old_posts:
+                for community in self.all_communities.values():
+                    await self.create_posts(community)
+
             self.cache_loaded = True
         except Exception as err:
             raise err

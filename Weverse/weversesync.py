@@ -20,10 +20,14 @@ class WeverseClientSync(WeverseClient):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def start(self):
+    def start(self, create_old_posts=True, create_notifications=True):
         """Creates internal cache.
 
         This is the main process that should be run.
+
+        :parameter create_old_posts: (:class:`bool`) Whether to create cache for old posts.
+        :parameter create_notifications: (:class:`bool`) Whether to create/update cache for old notifications.
+
 
         :raises: :class:`Weverse.error.PageNotFound`
         :raises: :class:`Weverse.error.InvalidToken`
@@ -32,11 +36,22 @@ class WeverseClientSync(WeverseClient):
         try:
             if not self.web_session:
                 self.web_session = requests.Session()
-            self.create_communities()
+
+            # create all communities that are subscribed to
+            self.create_communities()  # communities should be created no matter what
+
+            # create and update community artists and their tabs
             self.create_community_artists_and_tabs()
-            self.get_user_notifications()
-            for community in self.all_communities.values():
-                self.create_posts(community)
+
+            # create and update user notifications
+            if create_notifications:
+                self.get_user_notifications()
+
+            # load up posts
+            if create_old_posts:
+                for community in self.all_communities.values():
+                    self.create_posts(community)
+
             self.cache_loaded = True
         except Exception as err:
             raise err
