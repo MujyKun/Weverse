@@ -228,7 +228,7 @@ class WeverseClient:
             "comment", "media", or "post"
         """
 
-        if "commented on" in notification_body:
+        if "commented on" in notification_body or "replied to" in notification_body:
             return "comment"
         # if "shared a moment with you" in notification_body:
             # return "tofans"
