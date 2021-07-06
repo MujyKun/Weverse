@@ -39,7 +39,6 @@ class WeverseClientAsync(WeverseClient):
         :parameter create_old_posts: (:class:`bool`) Whether to create cache for old posts.
         :parameter create_notifications: (:class:`bool`) Whether to create/update cache for old notifications.
 
-        :raises: :class:`Weverse.error.PageNotFound`
         :raises: :class:`Weverse.error.InvalidToken`
         :raises: :class:`Weverse.error.BeingRateLimited`
         """
