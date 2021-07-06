@@ -1,5 +1,4 @@
 import aiohttp
-import json
 from asyncio import get_event_loop
 from .models import Community, Post as w_Post
 from . import WeverseClient, create_post_objects, create_community_objects, create_notification_objects, \
@@ -72,11 +71,10 @@ class WeverseClientAsync(WeverseClient):
 
         This is a coroutine and must be awaited.
         """
-        async with self.web_session.get(self.api_communities_url, headers=self.headers) as resp:
+        async with self.web_session.get(self.api_communities_url, headers=self._headers) as resp:
             if self.check_status(resp.status, self.api_communities_url):
-                response_text = await resp.text()
-                response_text_as_dict = json.loads(response_text)
-                user_communities = response_text_as_dict.get("communities")
+                data = await resp.json()
+                user_communities = data.get("communities")
                 self.all_communities = create_community_objects(user_communities)
 
     async def create_community_artists_and_tabs(self):
@@ -86,11 +84,10 @@ class WeverseClientAsync(WeverseClient):
         """
         for community in self.all_communities.values():
             url = self.api_communities_url + str(community.id)
-            async with self.web_session.get(url, headers=self.headers) as resp:
+            async with self.web_session.get(url, headers=self._headers) as resp:
                 if self.check_status(resp.status, url):
-                    response_text = await resp.text()
-                    response_text_as_dict = json.loads(response_text)
-                    self.process_community_artists_and_tabs(community, response_text_as_dict)
+                    data = await resp.json()
+                    self.process_community_artists_and_tabs(community, data)
                     for artist in community.artists:
                         self.all_artists[artist.id] = artist
                     for tab in community.tabs:
@@ -107,15 +104,22 @@ class WeverseClientAsync(WeverseClient):
         artist_tab_url = self.api_communities_url + str(community.id) + '/' + self.api_all_artist_posts_url
         if next_page_id:
             artist_tab_url = artist_tab_url + "?from=" + str(next_page_id)
-        async with self.web_session.get(artist_tab_url, headers=self.headers) as resp:
+        async with self.web_session.get(artist_tab_url, headers=self._headers) as resp:
             if self.check_status(resp.status, artist_tab_url):
-                response_text = await resp.text()
-                response_text_as_dict = json.loads(response_text)
-                posts = create_post_objects(response_text_as_dict.get('posts'), community)
+                data = await resp.json()
+                posts = create_post_objects(data.get('posts'), community)
                 for post in posts:
                     self.all_posts[post.id] = post
-                if not response_text_as_dict.get('isEnded'):
-                    await self.create_posts(community, response_text_as_dict.get('lastId'))
+                    if post.photos:
+                        for photo in post.photos:
+                            self.all_photos[photo.id] = photo
+
+                    if post.videos:
+                        for video in post.photos:
+                            self.all_videos[video.video_url] = video
+
+                if not data.get('isEnded'):
+                    await self.create_posts(community, data.get('lastId'))
 
     async def create_post(self, community: Community, post_id) -> w_Post:
         """Create a post and update the cache with it. This is meant for an individual post.
@@ -126,11 +130,10 @@ class WeverseClientAsync(WeverseClient):
         :parameter post_id: The id of the post we are needing to fetch.
         """
         post_url = self.api_communities_url + str(community.id) + '/posts/' + str(post_id)
-        async with self.web_session.get(post_url, headers=self.headers) as resp:
+        async with self.web_session.get(post_url, headers=self._headers) as resp:
             if self.check_status(resp.status, post_url):
-                response_text = await resp.text()
-                response_text_as_dict = json.loads(response_text)
-                return (create_post_objects([response_text_as_dict], community, new=True))[0]
+                data = await resp.json()
+                return (create_post_objects([data], community, new=True))[0]
 
     async def get_user_notifications(self):
         """Get a list of updated user notification objects.
@@ -139,11 +142,10 @@ class WeverseClientAsync(WeverseClient):
 
         :returns: List[:ref:`Notification`]
         """
-        async with self.web_session.get(self.api_notifications_url, headers=self.headers) as resp:
+        async with self.web_session.get(self.api_notifications_url, headers=self._headers) as resp:
             if self.check_status(resp.status, self.api_notifications_url):
-                response_text = await resp.text()
-                response_text_as_dict = json.loads(response_text)
-                self.user_notifications = create_notification_objects(response_text_as_dict.get('notifications'))
+                data = await resp.json()
+                self.user_notifications = create_notification_objects(data.get('notifications'))
                 for user_notification in self.user_notifications:
                     self.all_notifications[user_notification.id] = user_notification
                 return self.user_notifications
@@ -155,11 +157,10 @@ class WeverseClientAsync(WeverseClient):
 
         :returns: (:class:`bool`) Whether there is a new notification.
         """
-        async with self.web_session.get(self.api_new_notifications_url, headers=self.headers) as resp:
+        async with self.web_session.get(self.api_new_notifications_url, headers=self._headers) as resp:
             if self.check_status(resp.status, self.api_new_notifications_url):
-                response_text = await resp.text()
-                response_text_as_dict = json.loads(response_text)
-                has_new = response_text_as_dict.get('has_new')
+                data = await resp.json()
+                has_new = data.get('has_new')
                 if has_new:
                     # update cache
                     # Not that cache_loaded necessarily matters here,
@@ -206,11 +207,10 @@ class WeverseClientAsync(WeverseClient):
                 return None
         url = self.api_communities_url + str(community_id) + "/" + method_url + str(
             post_or_comment_id) + "/translate?languageCode=en"
-        async with self.web_session.get(url, headers=self.headers) as resp:
+        async with self.web_session.get(url, headers=self._headers) as resp:
             if self.check_status(resp.status, url):
-                response_text = await resp.text()
-                response_text_as_dict = json.loads(response_text)
-                return response_text_as_dict.get('translation')
+                data = await resp.json()
+                return data.get('translation')
 
     async def fetch_artist_comments(self, community_id, post_id):
         """Fetches the artist comments on a post.
@@ -222,11 +222,10 @@ class WeverseClientAsync(WeverseClient):
         :returns: List[:ref:`Comment`]
         """
         post_comments_url = self.api_communities_url + str(community_id) + '/posts/' + str(post_id) + "/comments/"
-        async with self.web_session.get(post_comments_url, headers=self.headers) as resp:
+        async with self.web_session.get(post_comments_url, headers=self._headers) as resp:
             if self.check_status(resp.status, post_comments_url):
-                response_text = await resp.text()
-                response_text_as_dict = json.loads(response_text)
-                return create_comment_objects(response_text_as_dict.get('artistComments'))
+                data = await resp.json()
+                return create_comment_objects(data.get('artistComments'))
 
     async def fetch_comment_body(self, community_id, comment_id):
         """Fetches a comment from its ID.
@@ -238,11 +237,10 @@ class WeverseClientAsync(WeverseClient):
         :returns: (:class:`str`) Body of the comment.
         """
         comment_url = f"{self.api_communities_url}{str(community_id)}/comments/{comment_id}/"
-        async with self.web_session.get(comment_url, headers=self.headers) as resp:
+        async with self.web_session.get(comment_url, headers=self._headers) as resp:
             if self.check_status(resp.status, comment_url):
-                response_text = await resp.text()
-                response_text_as_dict = json.loads(response_text)
-                return response_text_as_dict.get('body')
+                data = await resp.json()
+                return data.get('body')
 
     async def fetch_media(self, community_id, media_id):
         """Receive media object based on media id.
@@ -254,11 +252,10 @@ class WeverseClientAsync(WeverseClient):
         :returns: :ref:`Media` or NoneType
         """
         media_url = self.api_communities_url + str(community_id) + "/medias/" + str(media_id)
-        async with self.web_session.get(media_url, headers=self.headers) as resp:
+        async with self.web_session.get(media_url, headers=self._headers) as resp:
             if self.check_status(resp.status, media_url):
-                response_text = await resp.text()
-                response_text_as_dict = json.loads(response_text)
-                return create_media_object(response_text_as_dict.get('media'))
+                data = await resp.json()
+                return create_media_object(data.get('media'))
 
     async def update_cache_from_notification(self):
         """Grab a new post based from a notification and add it to cache.
@@ -306,5 +303,5 @@ class WeverseClientAsync(WeverseClient):
 
         :returns: (:class:`bool`) True if the token works.
         """
-        async with self.web_session.get(url=self.user_endpoint, headers=self.headers) as resp:
+        async with self.web_session.get(url=self.user_endpoint, headers=self._headers) as resp:
             return resp.status == 200

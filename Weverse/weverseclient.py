@@ -1,7 +1,7 @@
 from . import create_artist_objects, create_tab_objects, InvalidToken
 from .models import Artist as w_Artist, \
     Comment as w_Comment, Media as w_Media, Notification as w_Notification, Photo as w_Photo, Post as w_Post, \
-    Tab as w_Tab, Community as w_Community
+    Tab as w_Tab, Community as w_Community, Video as w_Video
 
 
 class WeverseClient:
@@ -27,12 +27,8 @@ class WeverseClient:
         Whether to print out verbose messages.
     web_session:
         An aiohttp or requests client session.
-    token:
-        The account token to connect to the Weverse API. In order to find your token, please refer to :ref:`account_token`
     user_notifications: list
         Most recent notifications of the account connected.
-    headers: dict
-        API Header
     api_url: str
         URL to connect to the API
     api_communities_url: str
@@ -55,28 +51,30 @@ class WeverseClient:
     user_endpoint: str
         User info endpoint.
     all_posts: dict(Post)
-        All posts in cache where the dict of Post ID is the key, and the value being the Post Object
+        All posts in cache where the Post ID is the key and the value is the Post Object
     all_artists: dict(Artist)
-        All artists in cache where the dict of Artist ID is the key, and the value being the Artist Object
+        All artists in cache where the Artist ID is the key and the value is the Artist Object
     all_comments: dict(Comment)
-        All comments in cache where the dict of Comment ID is the key, and the value being the Comment Object
+        All comments in cache where the Comment ID is the key and the value is the Comment Object
     all_notifications: dict(Notification)
-        All notifications in cache where the dict of Notification ID is the key, and the value being the Notification Object
+        All notifications in cache where the Notification ID is the key and the value is the Notification Object
     all_photos: dict(Photo)
-        All photos in cache where the dict of Photo ID is the key, and the value being the Photo Object
+        All photos in cache where the Photo ID is the key and the value is the Photo Object
     all_communities: dict(Community)
-        All communities in cache where the dict of Community ID is the key, and the value being the Community Object
+        All communities in cache where the Community ID is the key and the value is the Community Object
     all_media: dict(Media)
-        All media in cache where the dict of Media ID is the key, and the value being the Media Object
+        All media in cache where the Media ID is the key and the value is the Media Object
     all_tabs: dict(Tab)
-         All tabs in cache where the dict of Tab ID is the key, and the value being the Tab Object
+         All tabs in cache where the Tab ID is the key and the value is the Tab Object
+    all_videos: dict(Video)
+        All videos in cache where the Video URL is the key and the value is the Video Object
    """
     def __init__(self, **kwargs):
         self.verbose = kwargs.get('verbose')
         self.web_session = kwargs.get('web_session')
-        self.token = kwargs.get('authorization')
+        self._token = kwargs.get('authorization')
         self.user_notifications = []
-        self.headers = {'Authorization': f"Bearer {self.token}"}
+        self._headers = {'Authorization': f"Bearer {self._token}"}
         self.api_url = "https://weversewebapi.weverse.io/wapi/v1/"
         self.api_communities_url = self.api_url + "communities/"  # endpoint for communities
         self.api_notifications_url = self.api_url + "stream/notifications/"  # endpoint for user notifications
@@ -98,6 +96,8 @@ class WeverseClient:
         self.all_communities = {}
         self.all_media = {}
         self.all_tabs = {}
+        # Videos have the url as the key due to no unique ID.
+        self.all_videos = {}
 
     def check_status(self, status, url) -> bool:
         """
@@ -115,10 +115,10 @@ class WeverseClient:
         elif status == 404:
             if self.verbose:
                 # raise error.PageNotFound
-                print("WARNING: " + url + " was not found.")
+                print("WARNING (NOT CRITICAL): " + url + " was not found.")
         else:
             if self.verbose:
-                print("WARNING: " + url + " Failed to load. [Status: " + str(status) + "]")
+                print("WARNING (NOT CRITICAL): " + url + " Failed to load. [Status: " + str(status) + "]")
 
     @staticmethod
     def process_community_artists_and_tabs(community, response_text_as_dict):
@@ -197,6 +197,15 @@ class WeverseClient:
         :returns: :ref:`Photo` or NoneType
         """
         return self.all_photos.get(photo_id)
+
+    def get_video_by_url(self, video_url) -> w_Video:
+        """
+        Get a video by the direct URL.
+
+        :param video_url: URL of the video
+        :return: :ref:`Video` or NoneType
+        """
+        return self.all_videos.get(video_url)
 
     def get_community_by_id(self, community_id) -> w_Community:
         """

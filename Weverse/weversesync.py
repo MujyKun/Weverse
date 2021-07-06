@@ -58,7 +58,7 @@ class WeverseClientSync(WeverseClient):
 
     def create_communities(self):
         """Get and Create the communities the logged in user has access to."""
-        with self.web_session.get(self.api_communities_url, headers=self.headers) as resp:
+        with self.web_session.get(self.api_communities_url, headers=self._headers) as resp:
             if self.check_status(resp.status_code, self.api_communities_url):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
@@ -69,7 +69,7 @@ class WeverseClientSync(WeverseClient):
         """Create the community artists and tabs and add them to their respective communities."""
         for community in self.all_communities.values():
             url = self.api_communities_url + str(community.id)
-            with self.web_session.get(url, headers=self.headers) as resp:
+            with self.web_session.get(url, headers=self._headers) as resp:
                 if self.check_status(resp.status_code, url):
                     response_text = resp.text
                     response_text_as_dict = json.loads(response_text)
@@ -88,13 +88,20 @@ class WeverseClientSync(WeverseClient):
         artist_tab_url = self.api_communities_url + str(community.id) + '/' + self.api_all_artist_posts_url
         if next_page_id:
             artist_tab_url = artist_tab_url + "?from=" + str(next_page_id)
-        with self.web_session.get(artist_tab_url, headers=self.headers) as resp:
+        with self.web_session.get(artist_tab_url, headers=self._headers) as resp:
             if self.check_status(resp.status_code, artist_tab_url):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
                 posts = create_post_objects(response_text_as_dict.get('posts'), community)
                 for post in posts:
                     self.all_posts[post.id] = post
+                    if post.photos:
+                        for photo in post.photos:
+                            self.all_photos[photo.id] = photo
+
+                    if post.videos:
+                        for video in post.photos:
+                            self.all_videos[video.video_url] = video
                 if not response_text_as_dict.get('isEnded'):
                     self.create_posts(community, response_text_as_dict.get('lastId'))
 
@@ -105,7 +112,7 @@ class WeverseClientSync(WeverseClient):
         :parameter post_id: The id of the post we are needing to fetch.
         """
         post_url = self.api_communities_url + str(community.id) + '/posts/' + str(post_id)
-        with self.web_session.get(post_url, headers=self.headers) as resp:
+        with self.web_session.get(post_url, headers=self._headers) as resp:
             if self.check_status(resp.status_code, post_url):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
@@ -116,7 +123,7 @@ class WeverseClientSync(WeverseClient):
 
         :returns: List[:ref:`Notification`]
         """
-        with self.web_session.get(self.api_notifications_url, headers=self.headers) as resp:
+        with self.web_session.get(self.api_notifications_url, headers=self._headers) as resp:
             if self.check_status(resp.status_code, self.api_notifications_url):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
@@ -130,7 +137,7 @@ class WeverseClientSync(WeverseClient):
 
         :returns: (:class:`bool`) Whether there is a new notification.
         """
-        with self.web_session.get(self.api_new_notifications_url, headers=self.headers) as resp:
+        with self.web_session.get(self.api_new_notifications_url, headers=self._headers) as resp:
             if self.check_status(resp.status_code, self.api_new_notifications_url):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
@@ -179,7 +186,7 @@ class WeverseClientSync(WeverseClient):
                 return None
         url = self.api_communities_url + str(community_id) + "/" + method_url + str(
             post_or_comment_id) + "/translate?languageCode=en"
-        with self.web_session.get(url, headers=self.headers) as resp:
+        with self.web_session.get(url, headers=self._headers) as resp:
             if self.check_status(resp.status_code, url):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
@@ -193,7 +200,7 @@ class WeverseClientSync(WeverseClient):
         :returns: List[:ref:`Comment`]
         """
         post_comments_url = self.api_communities_url + str(community_id) + '/posts/' + str(post_id) + "/comments/"
-        with self.web_session.get(post_comments_url, headers=self.headers) as resp:
+        with self.web_session.get(post_comments_url, headers=self._headers) as resp:
             if self.check_status(resp.status_code, post_comments_url):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
@@ -207,7 +214,7 @@ class WeverseClientSync(WeverseClient):
         :returns: (:class:`str`) Body of the comment.
         """
         comment_url = f"{self.api_communities_url}{str(community_id)}/comments/{comment_id}/"
-        with self.web_session.get(comment_url, headers=self.headers) as resp:
+        with self.web_session.get(comment_url, headers=self._headers) as resp:
             if self.check_status(resp.status_code, comment_url):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
@@ -221,7 +228,7 @@ class WeverseClientSync(WeverseClient):
         :returns: :ref:`Media` or NoneType
         """
         media_url = self.api_communities_url + str(community_id) + "/medias/" + str(media_id)
-        with self.web_session.get(media_url, headers=self.headers) as resp:
+        with self.web_session.get(media_url, headers=self._headers) as resp:
             if self.check_status(resp.status_code, media_url):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
@@ -265,5 +272,5 @@ class WeverseClientSync(WeverseClient):
 
         :returns: (:class:`bool`) True if the token works.
         """
-        with self.web_session.get(url=self.user_endpoint, headers=self.headers) as resp:
+        with self.web_session.get(url=self.user_endpoint, headers=self._headers) as resp:
             return resp.status_code == 200

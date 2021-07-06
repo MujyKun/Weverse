@@ -1,7 +1,7 @@
 class Video:
     r"""A Video object that represents a Weverse Video that belongs to media or a post.
 
-    It is not suggested to create a Photo manually, but rather through the
+    It is not suggested to create a Video manually, but rather through the
     following method: :class:`Weverse.objects.create_video_objects`
 
     The information retrieved on a Video is directly from the Weverse API and altered to fit this class.

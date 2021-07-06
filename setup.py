@@ -1,7 +1,14 @@
 from setuptools import setup, find_packages
+import re
 
 with open("README.md", "r") as f:
     long_description = f.read()
+
+with open('discord/__init__.py') as f:
+    version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', f.read(), re.MULTILINE).group(1) or ''
+
+if not version:
+    raise RuntimeError('No Version Found.')
 
 
 def parse_requirements(filename):
@@ -12,7 +19,7 @@ def parse_requirements(filename):
 
 setup(
     name='Weverse',
-    version='1.0.2',
+    version=version,
     packages=find_packages(),
     install_requires=parse_requirements("requirements.txt"),
     url='https://github.com/MujyKun/Weverse/',

@@ -6,3 +6,8 @@ from .objects import create_tab_objects, create_community_objects, create_commen
 from .weverseclient import WeverseClient
 from .weversesync import WeverseClientSync
 from .weverseasync import WeverseClientAsync
+
+__title__ = 'Weverse'
+__author__ = 'MujyKun'
+__license__ = 'MIT'
+__version__ = '1.0.2.1'
