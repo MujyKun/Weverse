@@ -2,7 +2,7 @@
 
 ### What is it?
 Weverse creates internal cache for the communities a user follows on [weverse.io](https://www.weverse.io/).  
-This is a **wrapper** for Weverse's private API, but will be referred to as an API on this repository.
+This is a **wrapper** for Weverse's private API, but may be referred to as an API on this repository.
 
 ### **[API Documentation](https://weverse.readthedocs.io/en/latest/)**
 
@@ -11,7 +11,7 @@ This is a **wrapper** for Weverse's private API, but will be referred to as an A
 * Asynchronous and Synchronous Support
 * Receive all the posts the artists in your communities have made. This includes all images/videos/comments made by them.
 * Cache is split under a hierarchy directly under a community. The most recent is always the first element (0th index).
-* Keep track of notifications on your user account, you can easily create a loop to update your notification cache on updates. [**Example of real usage**](https://github.com/MujyKun/IreneBot/blob/5ed92595314e146d0f4a7a3f04461afd168d327f/module/Weverse.py#L80)
+* Keep track of notifications on your user account, you can easily create a loop to update your notification cache on updates. (Usage of this can be found in the examples folder)
 
 ### Installation
 
