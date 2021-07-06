@@ -46,6 +46,9 @@ import aiohttp
 from Weverse.error import InvalidToken
 from Weverse.weverseasync import WeverseClientAsync
 
+# THERE IS A MORE DETAILED EXAMPLE IN THE EXAMPLES FOLDER
+# https://github.com/MujyKun/Weverse/blob/main/examples/asynchronous.py
+
 token = "fake_token"  # REQUIRED
 # It is advised to pass in your own web session as it is not closed in Weverse 
 web_session = aiohttp.ClientSession()  # A session is created by default 
@@ -61,6 +64,10 @@ import requests
 from Weverse.weversesync import WeverseClientSync
 from Weverse.error import InvalidToken
 
+
+# THERE IS A MORE DETAILED EXAMPLE IN THE EXAMPLES FOLDER
+# https://github.com/MujyKun/Weverse/blob/main/examples/synchronous.py
+
 token = "fake_token"  # REQUIRED
 # It is advised to pass in your own web session as it is not closed in Weverse
 web_session = requests.Session()  # A session is created by default 
@@ -75,5 +82,7 @@ except InvalidToken:
 # if only the newer posts are wanted. More info on the documentation.
 
 ```
+**[More Detailed Asynchronous Example](https://github.com/MujyKun/Weverse/blob/main/examples/asynchronous.py)**  
+**[More Detailed Synchronous Example](https://github.com/MujyKun/Weverse/blob/main/examples/synchronous.py)**
 
 ### **[API Documentation](https://weverse.readthedocs.io/en/latest/)**

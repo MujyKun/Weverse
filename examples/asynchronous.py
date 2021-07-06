@@ -168,3 +168,10 @@ class Example:
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.run_until_complete(Example().start())
+
+    # Please note that if you are running Weverse in a huge program and you are loading the entire cache, this should
+    # be run using asyncio.create_task
+    # Assuming you will not be running the Weverse section from the main part (this function) of your program,
+    # it would be advised to do something along the lines of the below line
+    # task = asyncio.create_task(Example().start())
+
