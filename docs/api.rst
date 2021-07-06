@@ -49,6 +49,12 @@ Photo
     :members:
 
 =========
+Video
+=========
+.. autoclass:: Weverse.models.Video
+    :members:
+
+=========
 Artist
 =========
 .. autoclass:: Weverse.models.Artist

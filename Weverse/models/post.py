@@ -40,6 +40,8 @@ class Post:
         Whether the post is private.
     photos: List[:ref:`Photo`]
         A list of photos under the post.
+    videos: List[:ref:`Video`]
+        A list of videos under the post.
     is_hot_trending_post: bool
         If the post is trending.
     is_limit_comment: bool
@@ -85,6 +87,8 @@ class Post:
         Whether the post is private.
     photos: List[:ref:`Photo`]
         A list of photos under the post.
+    videos: List[:ref:`Video`]
+        A list of videos under the post.
     is_hot_trending_post: bool
         If the post is trending.
     is_limit_comment: bool
@@ -115,6 +119,7 @@ class Post:
         self.is_active = kwargs.get('is_active')
         self.is_private = kwargs.get('is_private')
         self.photos = kwargs.get('photos')
+        self.videos = kwargs.get('videos')
         self.is_hot_trending_post = kwargs.get('is_hot_trending_post')
         self.is_limit_comment = kwargs.get('is_limit_comment')
         self.artist_comments = kwargs.get('artist_comments')

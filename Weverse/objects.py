@@ -1,4 +1,4 @@
-from .models import Community, Artist, Tab, Notification, Post, Photo, Comment, Media
+from .models import Community, Artist, Tab, Notification, Post, Photo, Comment, Media, Video
 
 
 def create_community_objects(current_communities: list) -> dict:
@@ -122,6 +122,7 @@ def create_post_objects(current_posts: list, community: Community, new=False) ->
         for post in current_posts:
             artist_comments = create_comment_objects(post.get('artistComments'))
             artist_photos = create_photo_objects(post.get('photos'))
+            artist_videos = create_video_objects(post.get('attachedVideos'))
             artist_info = post.get('communityUser')
             community_artist_id = artist_info.get('id')
             kwargs = {
@@ -143,6 +144,7 @@ def create_post_objects(current_posts: list, community: Community, new=False) ->
                 'is_active': post.get('isActive'),
                 'is_private': post.get('isPrivate'),
                 'photos': artist_photos,
+                'videos': artist_videos,
                 'is_hot_trending_post': post.get('isHotTrendingPost'),
                 'is_limit_comment': post.get('isLimitComment'),
                 'artist_comments': artist_comments
@@ -156,11 +158,34 @@ def create_post_objects(current_posts: list, community: Community, new=False) ->
                 comment.post = post_obj
             for photo in artist_photos:
                 photo.post = post_obj
+            for video in artist_videos:
+                video.post = post_obj
             for artist in community.artists:
                 if artist.community_user_id == community_artist_id:
                     artist.posts.append(post_obj)
                     post_obj.artist = artist
     return posts
+
+
+def create_video_objects(current_videos: list) -> list:
+    """Creates & Returns video objects based on a list of videos.
+
+    :param current_videos: Video information from api endpoint.
+    :returns: List[:ref:`Video`]
+    """
+    videos = []
+    if current_videos:
+        for video in current_videos:
+            kwargs = {
+                'video_url': video.get('id'),
+                'thumbnail_url': video.get('contentIndex'),
+                'thumbnail_width': video.get('thumbnailImgUrl'),
+                'thumbnail_height': video.get('thumbnailImgWidth'),
+                'length': video.get('thumbnailImgHeight'),
+            }
+            video_obj = Video(**kwargs)
+            videos.append(video_obj)
+    return videos
 
 
 def create_photo_objects(current_photos: list) -> list:
