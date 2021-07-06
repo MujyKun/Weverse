@@ -34,7 +34,7 @@ class Video:
     length: int
         Duration of the video in seconds.
     post: Post
-        The Post Object the photo belongs to.
+        The Post Object the video belongs to.
     """
     def __init__(self, **kwargs):
         self.video_url = kwargs.get('video_url')
