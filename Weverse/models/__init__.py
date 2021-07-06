@@ -4,6 +4,6 @@ from .community import Community
 from .media import Media
 from .notification import Notification
 from .photo import Photo
-from .post import Post
 from .tab import Tab
 from .video import Video
+from .post import Post

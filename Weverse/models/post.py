@@ -1,3 +1,8 @@
+from typing import Optional
+
+from . import Video, Photo, Artist, Comment
+
+
 class Post:
     r"""A Post object that represents a Weverse Post.
 
@@ -118,12 +123,12 @@ class Post:
         self.is_blind = kwargs.get('is_blind')
         self.is_active = kwargs.get('is_active')
         self.is_private = kwargs.get('is_private')
-        self.photos = kwargs.get('photos')
-        self.videos = kwargs.get('videos')
+        self.photos: [Photo] = kwargs.get('photos')
+        self.videos: [Video] = kwargs.get('videos')
         self.is_hot_trending_post = kwargs.get('is_hot_trending_post')
         self.is_limit_comment = kwargs.get('is_limit_comment')
-        self.artist_comments = kwargs.get('artist_comments')
+        self.artist_comments: Optional[Comment] = kwargs.get('artist_comments')
         self.community_artist_id = kwargs.get('community_artist_id')
         self.artist_id = kwargs.get('artist_id')
-        self.artist = None
+        self.artist: Optional[Artist] = None
 
