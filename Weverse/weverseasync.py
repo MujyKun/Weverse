@@ -1,6 +1,3 @@
-import operator
-from typing import Optional
-
 import aiohttp
 from asyncio import get_event_loop
 from .models import Community, Post as w_Post, Notification
