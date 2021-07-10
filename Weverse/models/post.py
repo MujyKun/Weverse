@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from . import Video, Photo, Artist, Comment
 
@@ -123,11 +123,11 @@ class Post:
         self.is_blind = kwargs.get('is_blind')
         self.is_active = kwargs.get('is_active')
         self.is_private = kwargs.get('is_private')
-        self.photos: [Photo] = kwargs.get('photos')
-        self.videos: [Video] = kwargs.get('videos')
+        self.photos: List[Photo] = kwargs.get('photos')
+        self.videos: List[Video] = kwargs.get('videos')
         self.is_hot_trending_post = kwargs.get('is_hot_trending_post')
         self.is_limit_comment = kwargs.get('is_limit_comment')
-        self.artist_comments: Optional[Comment] = kwargs.get('artist_comments')
+        self.artist_comments: Optional[List[Comment]] = kwargs.get('artist_comments')
         self.community_artist_id = kwargs.get('community_artist_id')
         self.artist_id = kwargs.get('artist_id')
         self.artist: Optional[Artist] = None
