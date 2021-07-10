@@ -1,6 +1,6 @@
 import json
 import requests
-from .models import Community, Post as w_Post
+from .models import Community, Post as w_Post, Notification
 from . import WeverseClient, create_post_objects, create_community_objects, create_notification_objects, \
     create_comment_objects, create_media_object
 
@@ -234,36 +234,49 @@ class WeverseClientSync(WeverseClient):
                 return create_media_object(response_text_as_dict.get('media'))
 
     def update_cache_from_notification(self):
-        """Grab a new post based from a notification and add it to cache."""
+        """Grab a new post based from new notifications and add it to cache."""
         try:
-            notification = (self.get_user_notifications())[0]
-            notification_type = self.determine_notification_type(notification.message)
-            community = self.get_community_by_id(notification.community_id)
-            if notification_type == 'comment':
-                artist_comments = self.fetch_artist_comments(notification.community_id, notification.contents_id)
-                comment = artist_comments[0]
-                comment.post = self.get_post_by_id(comment.post_id)
-                if comment.post:
-                    if comment.post.artist_comments:
-                        comment.post.artist_comments.insert(0, comment)
-                    else:
-                        comment.post.artist_comments = [comment]
-                self.all_comments[comment.id] = comment
+            notifications = self.get_user_notifications()
+            if not notifications:
+                return
 
-            elif notification_type in ["tofans", "post"]:
-                post = self.create_post(community, notification.contents_id)
-                if post:
-                    self.all_posts[post.id] = post
-            elif notification_type == 'media':
-                media = self.fetch_media(community.id, notification.contents_id)
-                if media:
-                    self.new_media.insert(0, media)
-                    self.all_media[media.id] = media
-            elif notification_type == 'announcement':
-                return  # not keeping track of announcements in cache ATM
+            for notification in self.get_new_notifications():
+                self.__manage_notification_posts(notification)
+
         except Exception as e:
             if self.verbose:
                 print(f"Failed to update Weverse Cache - {e}")
+
+    def __manage_notification_posts(self, notification: Notification):
+        """
+        Manages the creation of Notification posts and comments.
+
+        :param notification: Notification to create comments and posts for.
+        """
+        notification_type = self.determine_notification_type(notification.message)
+        community = self.get_community_by_id(notification.community_id)
+        if notification_type == 'comment':
+            artist_comments = self.fetch_artist_comments(notification.community_id, notification.contents_id)
+            comment = artist_comments[0]
+            comment.post = self.get_post_by_id(comment.post_id)
+            if comment.post:
+                if comment.post.artist_comments:
+                    comment.post.artist_comments.insert(0, comment)
+                else:
+                    comment.post.artist_comments = [comment]
+            self.all_comments[comment.id] = comment
+
+        elif notification_type in ["tofans", "post"]:
+            post = self.create_post(community, notification.contents_id)
+            if post:
+                self.all_posts[post.id] = post
+        elif notification_type == 'media':
+            media = self.fetch_media(community.id, notification.contents_id)
+            if media:
+                self.new_media.insert(0, media)
+                self.all_media[media.id] = media
+        elif notification_type == 'announcement':
+            return  # not keeping track of announcements in cache ATM
 
     def check_token_works(self):
         """

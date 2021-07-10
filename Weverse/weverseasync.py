@@ -1,6 +1,9 @@
+import operator
+from typing import Optional
+
 import aiohttp
 from asyncio import get_event_loop
-from .models import Community, Post as w_Post
+from .models import Community, Post as w_Post, Notification
 from . import WeverseClient, create_post_objects, create_community_objects, create_notification_objects, \
     create_comment_objects, create_media_object
 
@@ -141,6 +144,8 @@ class WeverseClientAsync(WeverseClient):
 
         :returns: List[:ref:`Notification`]
         """
+        self._old_notifications = self.user_notifications  # important for keeping track of what is new.
+
         async with self.web_session.get(self.api_notifications_url, headers=self._headers) as resp:
             if self.check_status(resp.status, self.api_notifications_url):
                 data = await resp.json()
@@ -257,42 +262,53 @@ class WeverseClientAsync(WeverseClient):
                 return create_media_object(data.get('media'))
 
     async def update_cache_from_notification(self):
-        """Grab a new post based from a notification and add it to cache.
+        """Grab a new post based from new notifications and add it to cache.
 
         This is a coroutine and must be awaited.
         """
         try:
             notifications = await self.get_user_notifications()
+
             if not notifications:
                 return
-            notification = notifications[0]
-            notification_type = self.determine_notification_type(notification.message)
-            community = self.get_community_by_id(notification.community_id)
-            if notification_type == 'comment':
-                artist_comments = await self.fetch_artist_comments(notification.community_id, notification.contents_id)
-                if artist_comments:
-                    comment = artist_comments[0]
-                    comment.post = self.get_post_by_id(comment.post_id)
-                    if comment.post:
-                        if comment.post.artist_comments:
-                            comment.post.artist_comments.insert(0, comment)
-                        else:
-                            comment.post.artist_comments = [comment]
-                    self.all_comments[comment.id] = comment
-            elif notification_type in ["tofans", "post"]:
-                post = await self.create_post(community, notification.contents_id)
-                if post:
-                    self.all_posts[post.id] = post
-            elif notification_type == 'media':
-                media = await self.fetch_media(community.id, notification.contents_id)
-                if media:
-                    self.new_media.insert(0, media)
-                    self.all_media[media.id] = media
-            elif notification_type == 'announcement':
-                return  # not keeping track of announcements in cache ATM
+
+            for notification in self.get_new_notifications():
+                await self.__manage_notification_posts(notification)
         except Exception as e:
             if self.verbose:
                 print(f"Failed to update Weverse Cache - {e}")
+
+    async def __manage_notification_posts(self, notification: Notification):
+        """Manages the creation of Notification posts and comments.
+
+        This is a coroutine and must be awaited.
+
+        :param notification: Notification to create comments and posts for.
+        """
+        notification_type = self.determine_notification_type(notification.message)
+        community = self.get_community_by_id(notification.community_id)
+        if notification_type == 'comment':
+            artist_comments = await self.fetch_artist_comments(notification.community_id, notification.contents_id)
+            if artist_comments:
+                comment = artist_comments[0]
+                comment.post = self.get_post_by_id(comment.post_id)
+                if comment.post:
+                    if comment.post.artist_comments:
+                        comment.post.artist_comments.insert(0, comment)
+                    else:
+                        comment.post.artist_comments = [comment]
+                self.all_comments[comment.id] = comment
+        elif notification_type in ["tofans", "post"]:
+            post = await self.create_post(community, notification.contents_id)
+            if post:
+                self.all_posts[post.id] = post
+        elif notification_type == 'media':
+            media = await self.fetch_media(community.id, notification.contents_id)
+            if media:
+                self.new_media.insert(0, media)
+                self.all_media[media.id] = media
+        elif notification_type == 'announcement':
+            return  # not keeping track of announcements in cache ATM
 
     async def check_token_works(self) -> bool:
         """
