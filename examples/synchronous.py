@@ -1,6 +1,6 @@
 import time
 import requests.sessions
-from typing import Optional
+from typing import Optional, List
 from Weverse import WeverseClientSync, InvalidToken, BeingRateLimited, models
 from dotenv import load_dotenv
 from os import getenv
@@ -90,7 +90,7 @@ except Exception as e:
 
 # We now have all of the data we would want to modify.
 
-def check_new_notifications() -> Optional[models.Notification]:
+def check_new_notifications() -> Optional[List[models.Notification]]:
     """Check for new weverse notifications.
 
     This should be called in a loop to constantly check for notifications.
@@ -107,49 +107,51 @@ def check_new_notifications() -> Optional[models.Notification]:
     if not weverse_client.user_notifications:
         return
 
-    # We can now get the latest notification
-    latest_notification = weverse_client.user_notifications[0]
-    return latest_notification
+    # We can now get the latest notifications
+    # get_new_notifications is new in V1.0.3. Separates new notifications from older ones.
+    latest_notifications = weverse_client.get_new_notifications()
+    return latest_notifications
 
 
 continue_loop = True
 while continue_loop:
     # This is a loop running to check for notifications.
-    new_notification = check_new_notifications()
-    if not new_notification:
+    new_notifications = check_new_notifications()
+    if not new_notifications:
         continue
 
-    # Two ways to determine the community name.
-    community_name = new_notification.community_name or new_notification.bold_element
-    if not community_name:
-        # In the case a notification faults from Weverse, this is a safety measure.
-        continue
+    for new_notification in new_notifications:
+        # Two ways to determine the community name.
+        community_name = new_notification.community_name or new_notification.bold_element
+        if not community_name:
+            # In the case a notification faults from Weverse, this is a safety measure.
+            continue
 
-    # We do not know the type of notification it is because it is usually hidden inside the message.
-    # The wrapper does not automatically check for this, so we must call the method.
-    notification_type = weverse_client.determine_notification_type(new_notification.message)
+        # We do not know the type of notification it is because it is usually hidden inside the message.
+        # The wrapper does not automatically check for this, so we must call the method.
+        notification_type = weverse_client.determine_notification_type(new_notification.message)
 
-    possible_notification_types = ["comment", "post", "media", "announcement"]
+        possible_notification_types = ["comment", "post", "media", "announcement"]
 
-    # The content ID is the ID of the actual post we are looking for.
-    content_id = new_notification.contents_id
+        # The content ID is the ID of the actual post we are looking for.
+        content_id = new_notification.contents_id
 
-    # In the below conditions, you should do any logic needed for knowing the types...
-    if notification_type == possible_notification_types[0]:  # comment
-        comment = weverse_client.get_comment_by_id(content_id)
-        ...  # Do stuff with the comment here
-    elif notification_type == possible_notification_types[1]:  # post
-        post = weverse_client.get_post_by_id(content_id)
-        ...  # Do stuff with the post here
-    elif notification_type == possible_notification_types[2]:  # media
-        media = weverse_client.get_media_by_id(content_id)
-        ...  # Do stuff with the media here
-    elif notification_type == possible_notification_types[3]:  # announcement
-        # Announcements are actually from the Staff of Weverse and not from the community specifically.
-        # Therefore the announcements are not stored in cache.
-        ...
-    else:  # No Type Found (Perhaps a new type was created but wrapper is not updated)
-        print(f"{new_notification.id} has an unrecognized type.")
+        # In the below conditions, you should do any logic needed for knowing the types...
+        if notification_type == possible_notification_types[0]:  # comment
+            comment = weverse_client.get_comment_by_id(content_id)
+            ...  # Do stuff with the comment here
+        elif notification_type == possible_notification_types[1]:  # post
+            post = weverse_client.get_post_by_id(content_id)
+            ...  # Do stuff with the post here
+        elif notification_type == possible_notification_types[2]:  # media
+            media = weverse_client.get_media_by_id(content_id)
+            ...  # Do stuff with the media here
+        elif notification_type == possible_notification_types[3]:  # announcement
+            # Announcements are actually from the Staff of Weverse and not from the community specifically.
+            # Therefore the announcements are not stored in cache.
+            ...
+        else:  # No Type Found (Perhaps a new type was created but wrapper is not updated)
+            print(f"{new_notification.id} has an unrecognized type.")
 
-    ...  # do more stuff if you want to.
+        ...  # do more stuff if you want to.
     continue_loop = False  # no longer want to check for notifications.

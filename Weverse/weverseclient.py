@@ -107,6 +107,8 @@ class WeverseClient:
     def get_new_notifications(self) -> List[w_Notification]:
         """Will get the new notifications from the last notification check.
 
+        Should only be used after :ref:`check_new_user_notifications`.
+
         :returns: List[:ref:`Notification`]
         """
         return [noti for noti in self.user_notifications if noti not in self._old_notifications]
