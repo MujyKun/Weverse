@@ -84,3 +84,10 @@ class Notification:
         self.is_membership_content = kwargs.get('is_membership_content')
         self.is_web_only = kwargs.get('is_web_only')
         self.platform = kwargs.get('platform')
+
+    def __eq__(self, other):
+        """Check if the IDs are equal."""
+        if not isinstance(other, Notification):
+            return NotImplemented
+
+        return self.id == other.id
