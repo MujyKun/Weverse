@@ -6,6 +6,8 @@ This is a **wrapper** for Weverse's private API, but may be referred to as an AP
 
 ### **[API Documentation](https://weverse.readthedocs.io/en/latest/)**
 
+**[A WEVERSE DISCORD BOT CAN BE FOUND HERE](https://github.com/MujyKun/WeverseBot)**
+
 ### Functionalities
 
 * Asynchronous and Synchronous Support
