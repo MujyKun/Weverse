@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from . import create_artist_objects, create_tab_objects, InvalidToken
 from .models import Artist as w_Artist, \
@@ -240,27 +240,40 @@ class WeverseClient:
         return self.all_media.get(media_id)
 
     @staticmethod
-    def determine_notification_type(notification_body) -> str:
+    def determine_notification_type(notification: Union[w_Notification, str]) -> str:
         """
-        Determine the post type based on the notification body.
+        Determine the post type based on the notification body or the Notification object itself.
 
         Since notifications do not differentiate between Posts and Comments, this is for that purpose.
 
-        :param notification_body: The body of the notification.
+        :param notification: The message body of the notification or the notification itself.
         :returns: A string with either
             "comment", "media", "post", or "announcement".
         """
+        if isinstance(notification, w_Notification):
+            notification_body = notification.message
+        else:
+            notification_body = notification
 
-        if "commented on" in notification_body or "replied to" in notification_body:
-            return "comment"
-        # if "shared a moment with you" in notification_body:
-            # return "tofans"
-        if "created a new post!" in notification_body or "shared a moment with you" in notification_body:
-            return "post"
-        if "Check out the new media" in notification_body:
-            return "media"
-        if "New announcement" in notification_body:
-            return "announcement"
+        comment_body_triggers = ["commented on", "replied to", "포스트에 댓글을 작성했습니다", "답글을 작성했습니다."]
+        post_body_triggers = ["님이 포스트를 작성했습니다", "created a new post!", "shared a moment with you",
+                              "모먼트가 도착했습니다"]
+        media_triggers = ["Check out the new media", "새로운 미디어"]
 
+        announcement_body_triggers = ["New announcement", "NOTICE:", "(광고)", "(AD)"]
 
+        for trigger in comment_body_triggers:
+            if trigger in notification_body:
+                return "comment"
 
+        for trigger in post_body_triggers:
+            if trigger in notification_body:
+                return "post"
+
+        for trigger in media_triggers:
+            if trigger in notification_body:
+                return "media"
+
+        for trigger in announcement_body_triggers:
+            if trigger in notification_body:
+                return "announcement"

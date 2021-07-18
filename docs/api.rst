@@ -141,6 +141,9 @@ Then ``ABCDEFGHIJKLMNOPQRSTUVWXYZ`` would be your auth token for Weverse.
 
 It is suggested to have the auth token as an environment variable.
 
+IMPORTANT NOTE: Not all korean key-phrases may be logged. Scroll to the bottom of the Weverse page when you are logged in
+and click "English" to set the account language to English.
+
 
 Asynchronous Usage
 ==================
