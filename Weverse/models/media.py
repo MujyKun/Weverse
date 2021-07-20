@@ -1,3 +1,8 @@
+from typing import List
+
+from . import Photo
+
+
 class Media:
     r"""A Media object that represents a Weverse Media Post.
 
@@ -48,6 +53,8 @@ class Media:
         The video link supplied under the media post.
     youtube_id: str
         The youtube video ID.
+    photos: List[:ref:`Photo`]
+        A list of photos under the media post.
     """
     def __init__(self, **kwargs):
         self.id = kwargs.get('id')
@@ -59,4 +66,6 @@ class Media:
         self.level = kwargs.get('level')
         self.video_link = kwargs.get('extVideoPath')
         self.youtube_id = kwargs.get('youtubeId')
+        self.photos: List[Photo] = kwargs.get('photo_objects') or []
+
 

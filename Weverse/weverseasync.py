@@ -2,7 +2,7 @@ import aiohttp
 from asyncio import get_event_loop
 from .models import Community, Post as w_Post, Notification
 from . import WeverseClient, create_post_objects, create_community_objects, create_notification_objects, \
-    create_comment_objects, create_media_object
+    create_comment_objects, create_media_object, iterate_community_media_categories
 
 
 class WeverseClientAsync(WeverseClient):
@@ -29,7 +29,7 @@ class WeverseClientAsync(WeverseClient):
         self.loop = loop
         super().__init__(**kwargs)
 
-    async def start(self, create_old_posts=True, create_notifications=True):
+    async def start(self, create_old_posts=True, create_notifications=True, create_media=False):
         """Creates internal cache.
 
         This is the main process that should be run.
@@ -38,6 +38,7 @@ class WeverseClientAsync(WeverseClient):
 
         :parameter create_old_posts: (:class:`bool`) Whether to create cache for old posts.
         :parameter create_notifications: (:class:`bool`) Whether to create/update cache for old notifications.
+        :parameter create_media: (:class:`bool`) Whether to create/update cache for old media.
 
         :raises: :class:`Weverse.error.InvalidToken`
         :raises: :class:`Weverse.error.BeingRateLimited`
@@ -56,22 +57,46 @@ class WeverseClientAsync(WeverseClient):
             if create_notifications:
                 await self.get_user_notifications()
 
-            # load up posts
-            if create_old_posts:
-                for community in self.all_communities.values():
+            for community in self.all_communities.values():
+                # load up posts
+                if create_old_posts:
                     await self.create_posts(community)
+
+                # load up media
+                if create_media:
+                    await self.create_media(community)
 
             self.cache_loaded = True
         except Exception as err:
             raise err
+
+    async def create_media(self, community: Community):
+        """Paginate through a community's media and add it to object cache.
+
+        :parameter community: :ref:`Community` the posts exist under.
+        """
+        media_tab_url = f"{self._api_stream_url}{community.id}/{self._api_media_tab}"
+        async with self.web_session.get(media_tab_url, headers=self._headers) as resp:
+            if self.check_status(resp.status, media_tab_url):
+                data = await resp.json()
+                media_objects, photo_media_dicts = iterate_community_media_categories(data)
+
+                # This endpoint does NOT give us any information about the photos, therefore we must make
+                # a separate api call to retrieve proper photo information for the photo media.
+                for media in photo_media_dicts:
+                    media_obj = await self.fetch_media(community.id, media.get("id"))
+                    if media_obj:
+                        media_objects.append(media_obj)
+
+                self._add_media_to_cache(media_objects)
 
     async def create_communities(self):
         """Get and Create the communities the logged in user has access to.
 
         This is a coroutine and must be awaited.
         """
-        async with self.web_session.get(self.api_communities_url, headers=self._headers) as resp:
-            if self.check_status(resp.status, self.api_communities_url):
+        async with self.web_session.get(self._api_communities_url, headers=self._headers) as resp:
+            if self.check_status(resp.status, self._api_communities_url):
                 data = await resp.json()
                 user_communities = data.get("communities")
                 self.all_communities = create_community_objects(user_communities)
@@ -82,7 +107,7 @@ class WeverseClientAsync(WeverseClient):
         This is a coroutine and must be awaited.
         """
         for community in self.all_communities.values():
-            url = self.api_communities_url + str(community.id)
+            url = self._api_communities_url + str(community.id)
             async with self.web_session.get(url, headers=self._headers) as resp:
                 if self.check_status(resp.status, url):
                     data = await resp.json()
@@ -100,7 +125,7 @@ class WeverseClientAsync(WeverseClient):
         :parameter community: :ref:`Community` the posts exist under.
         :parameter [OPTIONAL] next_page_id: Next Page ID (Weverse paginates posts).
         """
-        artist_tab_url = self.api_communities_url + str(community.id) + '/' + self.api_all_artist_posts_url
+        artist_tab_url = self._api_communities_url + str(community.id) + '/' + self._api_all_artist_posts_url
         if next_page_id:
             artist_tab_url = artist_tab_url + "?from=" + str(next_page_id)
         async with self.web_session.get(artist_tab_url, headers=self._headers) as resp:
@@ -128,7 +153,7 @@ class WeverseClientAsync(WeverseClient):
         :parameter community: :ref:`Community` the post was created under.
         :parameter post_id: The id of the post we are needing to fetch.
         """
-        post_url = self.api_communities_url + str(community.id) + '/posts/' + str(post_id)
+        post_url = self._api_communities_url + str(community.id) + '/posts/' + str(post_id)
         async with self.web_session.get(post_url, headers=self._headers) as resp:
             if self.check_status(resp.status, post_url):
                 data = await resp.json()
@@ -143,8 +168,8 @@ class WeverseClientAsync(WeverseClient):
         """
         self._old_notifications = self.user_notifications  # important for keeping track of what is new.
 
-        async with self.web_session.get(self.api_notifications_url, headers=self._headers) as resp:
-            if self.check_status(resp.status, self.api_notifications_url):
+        async with self.web_session.get(self._api_notifications_url, headers=self._headers) as resp:
+            if self.check_status(resp.status, self._api_notifications_url):
                 data = await resp.json()
                 self.user_notifications = create_notification_objects(data.get('notifications'))
                 for user_notification in self.user_notifications:
@@ -158,8 +183,8 @@ class WeverseClientAsync(WeverseClient):
 
         :returns: (:class:`bool`) Whether there is a new notification.
         """
-        async with self.web_session.get(self.api_new_notifications_url, headers=self._headers) as resp:
-            if self.check_status(resp.status, self.api_new_notifications_url):
+        async with self.web_session.get(self._api_new_notifications_url, headers=self._headers) as resp:
+            if self.check_status(resp.status, self._api_new_notifications_url):
                 data = await resp.json()
                 has_new = data.get('has_new')
                 if has_new:
@@ -206,7 +231,7 @@ class WeverseClientAsync(WeverseClient):
                         community_id = p_obj.artist.community_id
             else:
                 return None
-        url = self.api_communities_url + str(community_id) + "/" + method_url + str(
+        url = self._api_communities_url + str(community_id) + "/" + method_url + str(
             post_or_comment_id) + "/translate?languageCode=en"
         async with self.web_session.get(url, headers=self._headers) as resp:
             if self.check_status(resp.status, url):
@@ -222,7 +247,7 @@ class WeverseClientAsync(WeverseClient):
         :parameter post_id: Post ID to fetch the artist comments of.
         :returns: List[:ref:`Comment`]
         """
-        post_comments_url = self.api_communities_url + str(community_id) + '/posts/' + str(post_id) + "/comments/"
+        post_comments_url = self._api_communities_url + str(community_id) + '/posts/' + str(post_id) + "/comments/"
         async with self.web_session.get(post_comments_url, headers=self._headers) as resp:
             if self.check_status(resp.status, post_comments_url):
                 data = await resp.json()
@@ -237,7 +262,7 @@ class WeverseClientAsync(WeverseClient):
         :parameter comment_id: The ID of the comment to fetch.
         :returns: (:class:`str`) Body of the comment.
         """
-        comment_url = f"{self.api_communities_url}{str(community_id)}/comments/{comment_id}/"
+        comment_url = f"{self._api_communities_url}{str(community_id)}/comments/{comment_id}/"
         async with self.web_session.get(comment_url, headers=self._headers) as resp:
             if self.check_status(resp.status, comment_url):
                 data = await resp.json()
@@ -252,7 +277,7 @@ class WeverseClientAsync(WeverseClient):
         :parameter media_id: The ID of the media to fetch.
         :returns: :ref:`Media` or NoneType
         """
-        media_url = self.api_communities_url + str(community_id) + "/medias/" + str(media_id)
+        media_url = self._api_communities_url + str(community_id) + "/medias/" + str(media_id)
         async with self.web_session.get(media_url, headers=self._headers) as resp:
             if self.check_status(resp.status, media_url):
                 data = await resp.json()
@@ -302,7 +327,6 @@ class WeverseClientAsync(WeverseClient):
         elif notification_type == 'media':
             media = await self.fetch_media(community.id, notification.contents_id)
             if media:
-                self.new_media.insert(0, media)
                 self.all_media[media.id] = media
         elif notification_type == 'announcement':
             return  # not keeping track of announcements in cache ATM
@@ -315,5 +339,5 @@ class WeverseClientAsync(WeverseClient):
 
         :returns: (:class:`bool`) True if the token works.
         """
-        async with self.web_session.get(url=self.user_endpoint, headers=self._headers) as resp:
+        async with self.web_session.get(url=self._user_endpoint, headers=self._headers) as resp:
             return resp.status == 200

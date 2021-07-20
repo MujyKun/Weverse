@@ -1,3 +1,5 @@
+from typing import Optional, List
+
 from .models import Community, Artist, Tab, Notification, Post, Photo, Comment, Media, Video
 
 
@@ -199,6 +201,7 @@ def create_photo_objects(current_photos: list) -> list:
         for photo in current_photos:
             kwargs = {
                 'photo_id': photo.get('id'),
+                'media_id': photo.get('mediaId'),
                 'content_index': photo.get('contentIndex'),
                 'thumbnail_img_url': photo.get('thumbnailImgUrl'),
                 'thumbnail_img_width': photo.get('thumbnailImgWidth'),
@@ -239,10 +242,41 @@ def create_comment_objects(current_comments: list) -> list:
     return comments
 
 
-def create_media_object(media_info: dict) -> Media:
+def create_media_object(media_info: dict, ignore_photos=False) -> Media:
     """Creates and returns a media object
 
     :param media_info: media information from endpoint.
+    :param ignore_photos: Whether to ignore the photos that belong in the media object. (Other methods can
+        create it themselves.)
     :returns: :ref:`Media`
     """
+    if media_info.get("type") == "PHOTO" and not ignore_photos:
+        photos = media_info.get("photos")
+
+        if photos:
+            media_info["photo_objects"] = create_photo_objects(photos)
+
     return Media(**media_info)
+
+
+def iterate_community_media_categories(all_media_categories: dict) -> [List[Media], List[dict]]:
+    """Iterates through community media categories, creates Media posts and returns a list of them.
+
+    :param all_media_categories: A dict containing media posts that are filtered by category.
+    :returns: [List[:ref:`Media`], List[:ref:`dict`]] A list of Video Media objects and a list of dicts containing
+        photo media objects to later make own calls on to retrieve photos.
+    """
+    photo_media_dicts = []
+    video_media_objects = []
+    media_category = all_media_categories.get("mediasByCategory")
+    for media_dicts in media_category:
+        medias_list = media_dicts.get("medias")
+        # media_category_info = media_dicts.get("mediaCategory")
+        for media in medias_list:
+            # The information we are receiving from the endpoint does not give us any information about the photos,
+            # therefore, we need our caller method to take care of loading the media photos for us.
+            if media.get("type") == "PHOTO":
+                photo_media_dicts.append(media)
+            else:
+                video_media_objects.append(create_media_object(media))
+    return [video_media_objects, photo_media_dicts]

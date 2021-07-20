@@ -31,25 +31,9 @@ class WeverseClient:
         An aiohttp or requests client session.
     user_notifications: list
         Most recent notifications of the account connected.
-    api_url: str
-        URL to connect to the API
-    api_communities_url: str
-        Endpoint for communities
-    api_notifications_url: str
-        Endpoint for user notifications
-    api_new_notifications_url: str
-        Endpoint for checking new user notifications
-    api_all_artist_posts_url: str
-        Endpoint for getting the Artist Feed from a community
-    api_artist_to_fans: str
-        part of the endpoint (NOT FULL) for viewing the tofans posts.
-    api_all_communities_info_url: str
-        Endpoint for information about ALL communities and ALL idols.
     cache_loaded: bool
         Whether the Internal Weverse Cache is fully loaded.
         This will change for a split moment when grabbing a new post.
-    new_media: list(Media)
-        We do not store ALL old media objects as cache, so only when there are new media, we store it
     user_endpoint: str
         User info endpoint.
     all_posts: dict(Post)
@@ -80,18 +64,19 @@ class WeverseClient:
         self._old_notifications = []
         self._headers = {'Authorization': f"Bearer {self._token}"}
 
-        self.api_url = "https://weversewebapi.weverse.io/wapi/v1/"
-        self.api_communities_url = self.api_url + "communities/"  # endpoint for communities
-        self.api_notifications_url = self.api_url + "stream/notifications/"  # endpoint for user notifications
+        self._api_url = "https://weversewebapi.weverse.io/wapi/v1/"
+        self._api_communities_url = self._api_url + "communities/"  # endpoint for communities
+        self._api_notifications_url = self._api_url + "stream/notifications/"  # endpoint for user notifications
         # endpoint for checking new user notifications
-        self.api_new_notifications_url = self.api_notifications_url + "has-new/"
-        self.api_all_artist_posts_url = "posts/artistTab/"  # Artist Feed from a community
-        self.api_artist_to_fans = "posts/tofans/"
+        self._api_new_notifications_url = self._api_notifications_url + "has-new/"
+        self._api_all_artist_posts_url = "posts/artistTab/"  # Artist Feed from a community
+        self._api_stream_url = self._api_url + "/stream/community/"  # followed by community id and mediaTab.
+        self._api_media_tab = "mediaTab/categorical?countByCategory=100000"
+        self._api_artist_to_fans = "posts/tofans/"
         # endpoint for information about ALL communities and ALL idols.
-        self.api_all_communities_info_url = self.api_communities_url + "info/"
+        self._api_all_communities_info_url = self._api_communities_url + "info/"
         self.cache_loaded = False
-        self.new_media = []  # We do not store ALL media objects as cache, so only when there are new media, we store it
-        self.user_endpoint = "https://weversewebapi.weverse.io/wapi/v1/users/me"
+        self._user_endpoint = "https://weversewebapi.weverse.io/wapi/v1/users/me"
 
         self.all_posts = {}
         self.all_artists = {}
@@ -238,6 +223,18 @@ class WeverseClient:
         :returns: Optional[:ref:`Media`]
         """
         return self.all_media.get(media_id)
+
+    def _add_media_to_cache(self, media_objects: List[w_Media]):
+        """
+        Will add media objects and it's photos to cache.
+
+        :param media_objects:
+        """
+        for media in media_objects:
+            self.all_media[media.id] = media
+            if media.photos:
+                for photo in media.photos:
+                    self.all_photos[photo.id] = photo
 
     @staticmethod
     def determine_notification_type(notification: Union[w_Notification, str]) -> str:

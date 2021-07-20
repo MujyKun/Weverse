@@ -31,6 +31,8 @@ class Photo:
     -----------
     id: int
         The ID of the photo.
+    media_id: Optional[int]
+        The media ID of the photo (if there is one).
     content_index: int
         Index the photo is in from a bundle of photos.
     thumbnail_img_url: str
@@ -52,6 +54,7 @@ class Photo:
     """
     def __init__(self, **kwargs):
         self.id = kwargs.get('photo_id')
+        self.media_id = kwargs.get('media_id')
         self.content_index = kwargs.get('content_index')
         self.thumbnail_img_url = kwargs.get('thumbnail_img_url')
         self.thumbnail_img_width = kwargs.get('thumbnail_img_width')
