@@ -39,7 +39,7 @@ class Video:
         Height of the thumbnail.
     length: int
         Duration of the video in seconds.
-    post: Post
+    post: Optional[Post]
         The Post Object the video belongs to.
     """
     def __init__(self, **kwargs):

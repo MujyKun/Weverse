@@ -11,4 +11,4 @@ from .weverseasync import WeverseClientAsync
 __title__ = 'Weverse'
 __author__ = 'MujyKun'
 __license__ = 'MIT'
-__version__ = '1.0.5'
+__version__ = '1.0.5.1'
