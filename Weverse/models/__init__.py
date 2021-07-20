@@ -1,5 +1,5 @@
-from .artist import Artist
 from .comment import Comment
+from .artist import Artist
 from .community import Community
 from .notification import Notification
 from .photo import Photo

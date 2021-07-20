@@ -1,3 +1,8 @@
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from Weverse.models import Post
+
 class Comment:
     r"""A Comment object that represents a Weverse Comment that belongs to an Artist.
 
@@ -60,4 +65,4 @@ class Comment:
         self.post_id = kwargs.get('post_id')
         self.created_at = kwargs.get('created_at')
         self.updated_at = kwargs.get('updated_at')
-        self.post = None
+        self.post: Optional[Post] = None

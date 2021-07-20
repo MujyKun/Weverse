@@ -1,3 +1,9 @@
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from Weverse.models import Artist, Tab
+
+
 class Community:
     r"""A Comment object that represents a Weverse Comment that belongs to an Artist.
 
@@ -67,6 +73,6 @@ class Community:
         self.full_name = kwargs.get('full_name')
         self.fc_member = kwargs.get('fc_member')
         self.show_member_count = kwargs.get('show_member_count')
-        self.artists = []
-        self.tabs = []
+        self.artists: List[Artist] = []
+        self.tabs: List[Tab] = []
 

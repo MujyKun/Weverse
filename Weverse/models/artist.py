@@ -1,3 +1,9 @@
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from Weverse.models import Community
+
+
 class Artist:
     r"""An Artist object that represents a Weverse Artist that belongs in a community.
 
@@ -111,5 +117,5 @@ class Artist:
         self.to_fan_last_created_at = kwargs.get('to_fan_last_created_at')
         self.to_fan_last_expire_in = kwargs.get('to_fan_last_expire_in')
         self.birthday_img_url = kwargs.get('birthday_img_url')
-        self.community = None
+        self.community: Optional[Community] = None
         self.posts = []

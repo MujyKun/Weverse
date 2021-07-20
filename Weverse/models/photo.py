@@ -1,3 +1,9 @@
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from Weverse.models import Post
+
+
 class Photo:
     r"""A Photo object that represents a Weverse Photo that belongs to media or a post.
 
@@ -63,5 +69,5 @@ class Photo:
         self.original_img_width = kwargs.get('original_img_width')
         self.original_img_height = kwargs.get('original_img_height')
         self.file_name = kwargs.get('file_name')
-        self.post = None
+        self.post: Optional[Post] = None
 

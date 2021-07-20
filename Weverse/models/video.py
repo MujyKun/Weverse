@@ -1,3 +1,9 @@
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from Weverse.models import Post
+
+
 class Video:
     r"""A Video object that represents a Weverse Video that belongs to media or a post.
 
@@ -42,5 +48,5 @@ class Video:
         self.thumbnail_width = kwargs.get('thumbnail_width')
         self.thumbnail_height = kwargs.get('thumbnail_height')
         self.length = kwargs.get('length')
-        self.post = None
+        self.post: Optional[Post] = None
 
