@@ -1,3 +1,6 @@
+import discord
+
+
 class Notification:
     r"""A Media object that represents a Weverse Media Post.
 
@@ -5,6 +8,14 @@ class Notification:
     following method: :class:`Weverse.objects.create_notification_objects`
 
     The information retrieved on a Notification is directly from the Weverse API and altered to fit this class.
+
+    .. container:: operations
+
+        .. describe:: x == y
+            Checks if two Notifications have the same ID.
+
+        .. describe:: x != y
+            Checks if two Notifications do not have the same ID.
 
     Parameters
     ----------
@@ -86,8 +97,11 @@ class Notification:
         self.platform = kwargs.get('platform')
 
     def __eq__(self, other):
-        """Check if the IDs are equal."""
+        """Check if the IDs of the Notifications are equal."""
         if not isinstance(other, Notification):
             return NotImplemented
 
         return self.id == other.id
+
+    def __ne__(self, other):
+        return not self == other
