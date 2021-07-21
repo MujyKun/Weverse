@@ -111,7 +111,7 @@ class Announcement:
         return image_src
 
     def __remove_html(self):
-        """Removes HTML tags of html content and returns a finalized version."""
+        """Removes HTML tags of the html content and returns a finalized version."""
         content = self.html_content.replace("<br>", "\n")  # replace new line tags before they get replaced.
         html_cleaner = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
         clean_text = re.sub(html_cleaner, '', content)
