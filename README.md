@@ -17,7 +17,7 @@ This is a **wrapper** for Weverse's private API, but may be referred to as an AP
 
 * Asynchronous and Synchronous Support
 * Receive all the posts the artists in your communities have made. This includes all images/videos/comments made by them.
-* Cache is split under a hierarchy directly under a community. The most recent is always the first element (0th index).
+* Cache is split under a hierarchy directly under a community.  
 * Keep track of notifications on your user account, you can easily create a loop to update your notification cache on updates. (Usage of this can be found in the examples folder)
 
 ### Installation
@@ -64,7 +64,8 @@ web_session = aiohttp.ClientSession()  # A session is created by default
 weverse_client = WeverseClientAsync(authorization=token, verbose=True, loop=asyncio.get_event_loop(),
                                     web_session=web_session)
 try:
-    await weverse_client.start()  # creates all the cache needed for your account.
+    # creates all the cache that is specified. If the create parameters are set to True, they will take a very long time.  
+    await weverse_client.start(create_old_posts=True, create_media=True)
 except InvalidToken:
     print("Invalid Token")
 
@@ -82,7 +83,8 @@ token = "fake_token"  # REQUIRED
 web_session = requests.Session()  # A session is created by default 
 weverse_client = WeverseClientSync(authorization=token, verbose=True)
 try:
-    weverse_client.start()  # creates all the cache needed for your account.
+    # creates all the cache that is specified. If the create parameters are set to True, they will take a very long time.  
+    weverse_client.start(create_old_posts=True, create_media=True) 
 except InvalidToken:
     print("Invalid Token")
 

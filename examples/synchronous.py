@@ -65,7 +65,9 @@ start_kwargs = {
     # seconds.
     "create_old_posts": True,
     # Will load up the past 20 notifications. This is a quick process, so you may as well load them up.
-    "create_notifications": True
+    "create_notifications": True,
+    # Will load ALL media posts. This will take a very long time if enabled.
+    "create_media": True
 }
 
 
@@ -147,8 +149,7 @@ while continue_loop:
             media = weverse_client.get_media_by_id(content_id)
             ...  # Do stuff with the media here
         elif notification_type == possible_notification_types[3]:  # announcement
-            # Announcements are actually from the Staff of Weverse and not from the community specifically.
-            # Therefore the announcements are not stored in cache.
+            # Announcements are not currently stored in cache.
             ...
         else:  # No Type Found (Perhaps a new type was created but wrapper is not updated)
             print(f"{new_notification.id} has an unrecognized type.")

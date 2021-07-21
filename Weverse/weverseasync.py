@@ -29,7 +29,7 @@ class WeverseClientAsync(WeverseClient):
         self.loop = loop
         super().__init__(**kwargs)
 
-    async def start(self, create_old_posts=True, create_notifications=True, create_media=False):
+    async def start(self, create_old_posts=False, create_notifications=True, create_media=False):
         """Creates internal cache.
 
         This is the main process that should be run.
