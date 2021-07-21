@@ -167,10 +167,12 @@ Asynchronous Usage
 
     token = "fake_token"  # REQUIRED
     # It is advised to pass in your own web session as it is not closed in Weverse
-    web_session = aiohttp.ClientSession()
-    weverse_client = WeverseClientAsync(authorization=token, verbose=True, loop=asyncio.get_event_loop(), web_session=web_session)
+    web_session = aiohttp.ClientSession()  # A session is created by default
+    weverse_client = WeverseClientAsync(authorization=token, verbose=True, loop=asyncio.get_event_loop(),
+                                        web_session=web_session)
     try:
-        await weverse_client.start()  # creates all the cache needed for your account.
+        # creates all the cache that is specified. If the create parameters are set to True, they will take a very long time.
+        await weverse_client.start(create_old_posts=True, create_media=True)
     except InvalidToken:
         print("Invalid Token")
 
@@ -192,6 +194,7 @@ Synchronous Usage
     web_session = requests.Session()  # A session is created by default
     weverse_client = WeverseClientSync(authorization=token, verbose=True)
     try:
-        weverse_client.start()  # creates all the cache needed for your account.
+        # creates all the cache that is specified. If the create parameters are set to True, they will take a very long time.
+        weverse_client.start(create_old_posts=True, create_media=True)
     except InvalidToken:
         print("Invalid Token")
