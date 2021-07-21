@@ -1,6 +1,5 @@
-from typing import Optional, List
-
-from . import Video, Photo, Artist, Comment
+from typing import Optional
+import re
 
 
 class Announcement:
@@ -35,9 +34,9 @@ class Announcement:
         The title of the announcement notice.
     content: str
         The HTML body of the page notice.
-    createdAt:
+    createdAt: str
         Timestamp with the date of when the announcement was created.
-    exposedAt:
+    exposedAt: str
         Timestamp with the date of when the announcement was released.
     categoryId: int
         Category that the announcement belongs to (used for paginating or quick endpoint access)
@@ -54,9 +53,9 @@ class Announcement:
         The title of the announcement notice.
     html_content: str
         The HTML body of the page notice.
-    created_at:
+    created_at: str
         Timestamp with the date of when the announcement was created.
-    exposed_at:
+    exposed_at: str
         Timestamp with the date of when the announcement was released.
     category_id: int
         Category that the announcement belongs to (used for paginating or quick endpoint access)
@@ -64,6 +63,8 @@ class Announcement:
         If only premium members have access to the announcement.
     image_url: Optional[str]
         An image url if one is present.
+    content: str
+        Body Content without the HTML tags.
 
     """
     def __init__(self, **kwargs):
@@ -76,6 +77,7 @@ class Announcement:
         self.category_id = kwargs.get("categoryId")
         self.fc_only: bool = kwargs.get("fcOnly")
         self.image_url: Optional[str] = self.__get_image()
+        self.content = self.__remove_html()
 
     def __eq__(self, other):
         """Check if the IDs of the Announcement objects are equal."""
@@ -89,8 +91,8 @@ class Announcement:
         return not self == other
 
     def __str__(self):
-        """Returns the Announcement content."""
-        return f"{self.html_content}"
+        """Returns the Announcement content without the HTML tags."""
+        return f"{self.content}"
 
     def __get_image(self):
         """Retrieve the image url from the html content if any exists."""
@@ -102,8 +104,17 @@ class Announcement:
         if skipped_start == -1:
             return ""
 
-        image_src = self.html_content[src_loc:end_of_src]
+        image_src = skipped_start[0:end_of_src]
         image_src = image_src.replace("src=", "")
         image_src = image_src.replace('\\', "")
         image_src = image_src.replace('"', "")
         return image_src
+
+    def __remove_html(self):
+        """Removes HTML tags of html content and returns a finalized version."""
+        content = self.html_content.replace("<br>", "\n")  # replace new line tags before they get replaced.
+        html_cleaner = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
+        clean_text = re.sub(html_cleaner, '', content)
+        return clean_text
+
+
