@@ -266,8 +266,8 @@ class WeverseClientSync(WeverseClient):
         :returns: :ref:`Announcement` or NoneType
         """
         announcement_url = self._api_communities_url + str(community_id) + "/notices/" + str(announcement_id)
-        async with self.web_session.get(announcement_url, headers=self._headers) as resp:
-            if self.check_status(resp.status, announcement_url):
+        with self.web_session.get(announcement_url, headers=self._headers) as resp:
+            if self.check_status(resp.status_code, announcement_url):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
                 return create_announcement_object(response_text_as_dict)
