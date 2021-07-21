@@ -160,8 +160,8 @@ class Example:
                     media = self.weverse_client.get_media_by_id(content_id)
                     ...  # Do stuff with the media here
                 elif notification_type == possible_notification_types[3]:  # announcement
-                    # Announcements are not currently stored in cache.
-                    ...
+                    announcement = self.weverse_client.get_announcement_by_id(content_id)
+                    ...  # Do stuff with the announcement here
                 else:  # No Type Found (Perhaps a new type was created but wrapper is not updated)
                     print(f"{new_notification.id} has an unrecognized type.")
 
