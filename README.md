@@ -4,9 +4,14 @@
 Weverse creates internal cache for the communities a user follows on [weverse.io](https://www.weverse.io/).  
 This is a **wrapper** for Weverse's private API, but may be referred to as an API on this repository.
 
+
+
 ### **[API Documentation](https://weverse.readthedocs.io/en/latest/)**
 
-**[A WEVERSE DISCORD BOT CAN BE FOUND HERE](https://github.com/MujyKun/WeverseBot)**
+### **[Discord Support Server](https://discord.gg/bEXm85V)**
+
+**[A WEVERSE DISCORD BOT CAN BE FOUND HERE](https://github.com/MujyKun/WeverseBot)**  
+
 
 ### Functionalities
 
