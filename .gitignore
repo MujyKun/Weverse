@@ -2,3 +2,4 @@ _*/
 *.idea/
 dist/
 *.egg-info/
+photos/

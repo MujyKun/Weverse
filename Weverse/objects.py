@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import List
 
 from .models import Community, Artist, Tab, Notification, Post, Photo, Comment, Media, Video
 
