@@ -3,7 +3,7 @@ from typing import List, Optional, Union
 from . import create_artist_objects, create_tab_objects, InvalidToken
 from .models import Artist as w_Artist, \
     Comment as w_Comment, Media as w_Media, Notification as w_Notification, Photo as w_Photo, Post as w_Post, \
-    Tab as w_Tab, Community as w_Community, Video as w_Video
+    Tab as w_Tab, Community as w_Community, Video as w_Video, Announcement as w_Announcement
 
 
 class WeverseClient:
@@ -226,6 +226,15 @@ class WeverseClient:
         :returns: Optional[:ref:`Media`]
         """
         return self.all_media.get(media_id)
+
+    def get_announcement_by_id(self, announcement_id) -> Optional[w_Announcement]:
+        """
+        Get Announcement by the ID
+
+        :param announcement_id: Media ID
+        :returns: Optional[:ref:`Announcement`]
+        """
+        return self.all_announcements.get(announcement_id)
 
     def _add_media_to_cache(self, media_objects: List[w_Media]):
         """
