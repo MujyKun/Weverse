@@ -1,8 +1,10 @@
+from typing import Optional
+
 import aiohttp
 from asyncio import get_event_loop
-from .models import Community, Post as w_Post, Notification
+from .models import Community, Post as w_Post, Notification, Announcement, Media
 from . import WeverseClient, create_post_objects, create_community_objects, create_notification_objects, \
-    create_comment_objects, create_media_object, iterate_community_media_categories
+    create_comment_objects, create_media_object, iterate_community_media_categories, create_announcement_object
 
 
 class WeverseClientAsync(WeverseClient):
@@ -253,7 +255,7 @@ class WeverseClientAsync(WeverseClient):
                 data = await resp.json()
                 return create_comment_objects(data.get('artistComments'))
 
-    async def fetch_comment_body(self, community_id, comment_id):
+    async def fetch_comment_body(self, community_id, comment_id) -> str:
         """Fetches a comment from its ID.
 
         This is a coroutine and must be awaited.
@@ -268,7 +270,7 @@ class WeverseClientAsync(WeverseClient):
                 data = await resp.json()
                 return data.get('body')
 
-    async def fetch_media(self, community_id, media_id):
+    async def fetch_media(self, community_id, media_id) -> Optional[Media]:
         """Receive media object based on media id.
 
         This is a coroutine and must be awaited.
@@ -282,6 +284,21 @@ class WeverseClientAsync(WeverseClient):
             if self.check_status(resp.status, media_url):
                 data = await resp.json()
                 return create_media_object(data.get('media'))
+
+    async def fetch_announcement(self, community_id: int, announcement_id: int) -> Optional[Announcement]:
+        """Receive announcement object based on announcement id.
+
+        This is a coroutine and must be awaited.
+
+        :parameter community_id: The ID of the community the media belongs to.
+        :parameter announcement_id: The ID of the announcement to fetch.
+        :returns: :ref:`Announcement` or NoneType
+        """
+        announcement_url = self._api_communities_url + str(community_id) + "/notices/" + str(announcement_id)
+        async with self.web_session.get(announcement_url, headers=self._headers) as resp:
+            if self.check_status(resp.status, announcement_url):
+                data = await resp.json()
+                return create_announcement_object(data)
 
     async def update_cache_from_notification(self):
         """Grab a new post based from new notifications and add it to cache.
@@ -329,7 +346,9 @@ class WeverseClientAsync(WeverseClient):
             if media:
                 self.all_media[media.id] = media
         elif notification_type == 'announcement':
-            return  # not keeping track of announcements in cache ATM
+            announcement = await self.fetch_announcement(community.id, notification.contents_id)
+            if announcement:
+                self.all_announcements[announcement.id] = announcement
 
     async def check_token_works(self) -> bool:
         """

@@ -1,8 +1,10 @@
 import json
+from typing import Optional
+
 import requests
-from .models import Community, Post as w_Post, Notification
+from .models import Community, Post as w_Post, Notification, Announcement
 from . import WeverseClient, create_post_objects, create_community_objects, create_notification_objects, \
-    create_comment_objects, create_media_object, iterate_community_media_categories
+    create_comment_objects, create_media_object, iterate_community_media_categories, create_announcement_object
 
 
 class WeverseClientSync(WeverseClient):
@@ -255,6 +257,20 @@ class WeverseClientSync(WeverseClient):
                 response_text = resp.text
                 response_text_as_dict = json.loads(response_text)
                 return create_media_object(response_text_as_dict.get('media'))
+
+    def fetch_announcement(self, community_id: int, announcement_id: int) -> Optional[Announcement]:
+        """Receive announcement object based on announcement id.
+
+        :parameter community_id: The ID of the community the media belongs to.
+        :parameter announcement_id: The ID of the announcement to fetch.
+        :returns: :ref:`Announcement` or NoneType
+        """
+        announcement_url = self._api_communities_url + str(community_id) + "/notices/" + str(announcement_id)
+        async with self.web_session.get(announcement_url, headers=self._headers) as resp:
+            if self.check_status(resp.status, announcement_url):
+                response_text = resp.text
+                response_text_as_dict = json.loads(response_text)
+                return create_announcement_object(response_text_as_dict)
 
     def update_cache_from_notification(self):
         """Grab a new post based from new notifications and add it to cache."""

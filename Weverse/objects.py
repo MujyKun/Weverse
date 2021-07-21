@@ -1,6 +1,6 @@
 from typing import List
 
-from .models import Community, Artist, Tab, Notification, Post, Photo, Comment, Media, Video
+from .models import Community, Artist, Tab, Notification, Post, Photo, Comment, Media, Video, Announcement
 
 
 def create_community_objects(current_communities: list) -> dict:
@@ -242,6 +242,15 @@ def create_comment_objects(current_comments: list) -> list:
     return comments
 
 
+def create_announcement_object(announcement_info: dict) -> Announcement:
+    """Creates and returns an announcement object
+
+    :param announcement_info: Announcement information from endpoint.
+    :returns: :ref:`Announcement`
+    """
+    return Announcement(**announcement_info)
+
+
 def create_media_object(media_info: dict, ignore_photos=False) -> Media:
     """Creates and returns a media object
 
@@ -257,6 +266,7 @@ def create_media_object(media_info: dict, ignore_photos=False) -> Media:
             media_info["photo_objects"] = create_photo_objects(photos)
 
     return Media(**media_info)
+
 
 
 def iterate_community_media_categories(all_media_categories: dict) -> [List[Media], List[dict]]:

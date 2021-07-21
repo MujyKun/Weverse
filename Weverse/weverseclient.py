@@ -54,6 +54,8 @@ class WeverseClient:
          All tabs in cache where the Tab ID is the key and the value is the Tab Object
     all_videos: dict(Video)
         All videos in cache where the Video URL is the key and the value is the Video Object
+    all_announcements: dict(Announcement)
+        All announcements/notices in cache where the Announcement ID is the key and the value is the Announcement Object
    """
     def __init__(self, **kwargs):
         self.verbose = kwargs.get('verbose')
@@ -88,6 +90,7 @@ class WeverseClient:
         self.all_tabs = {}
         # Videos have the url as the key due to no unique ID.
         self.all_videos = {}
+        self.all_announcements = {}
 
     def get_new_notifications(self) -> List[w_Notification]:
         """Will get the new notifications from the last notification check.
