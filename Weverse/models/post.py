@@ -11,6 +11,24 @@ class Post:
 
     The information retrieved on a Post is directly from the Weverse API and altered to fit this class.
 
+    .. container:: operations
+
+        .. describe:: x == y
+
+            Checks if two Post objects have the same ID.
+
+        .. describe:: x != y
+
+            Checks if two Post objects do not have the same ID.
+
+        .. describe:: str(x)
+
+            Returns the Post body message.
+
+        .. describe:: len(x)
+
+            Returns the amount of images (not videos) available.
+
     Parameters
     ----------
     id: int
@@ -132,3 +150,21 @@ class Post:
         self.artist_id = kwargs.get('artist_id')
         self.artist: Optional[Artist] = None
 
+    def __eq__(self, other):
+        """Check if the IDs of the Post objects are equal."""
+        if not isinstance(other, Post):
+            return NotImplemented
+
+        return self.id == other.id
+
+    def __ne__(self, other):
+        """Check if the IDs of the Post objects are not equal."""
+        return not self == other
+
+    def __str__(self):
+        """Returns the Post body message."""
+        return f"{self.body}"
+
+    def __len__(self):
+        """Returns the amount of images (not videos) available."""
+        return len(self.photos)

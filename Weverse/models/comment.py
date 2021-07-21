@@ -3,6 +3,7 @@ from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from Weverse.models import Post
 
+
 class Comment:
     r"""A Comment object that represents a Weverse Comment that belongs to an Artist.
 
@@ -10,6 +11,20 @@ class Comment:
     following method: :class:`Weverse.objects.create_comment_objects`
 
     The information retrieved on a Comment is directly from the Weverse API and altered to fit this class.
+
+    .. container:: operations
+
+        .. describe:: x == y
+
+            Checks if two Comments have the same ID.
+
+        .. describe:: x != y
+
+            Checks if two Comments do not have the same ID.
+
+        .. describe:: str(x)
+
+            Returns the comment's body.
 
     Parameters
     ----------
@@ -66,3 +81,19 @@ class Comment:
         self.created_at = kwargs.get('created_at')
         self.updated_at = kwargs.get('updated_at')
         self.post: Optional[Post] = None
+
+    def __eq__(self, other):
+        """Check if the IDs of the Comments are equal."""
+        if not isinstance(other, Comment):
+            return NotImplemented
+
+        return self.id == other.id
+
+    def __ne__(self, other):
+        """Check if the IDs of the Comments are not equal."""
+        return not self == other
+
+    def __str__(self):
+        """Returns the body of the comment."""
+        return f"{self.body}"
+

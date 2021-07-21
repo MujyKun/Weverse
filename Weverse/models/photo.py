@@ -12,6 +12,20 @@ class Photo:
 
     The information retrieved on a Photo is directly from the Weverse API and altered to fit this class.
 
+    .. container:: operations
+
+        .. describe:: x == y
+
+            Checks if two Photo objects have the same ID.
+
+        .. describe:: x != y
+
+            Checks if two Photo objects do not have the same ID.
+
+        .. describe:: str(x)
+
+            Returns the file name.
+
     Parameters
     ----------
     id: int
@@ -71,3 +85,17 @@ class Photo:
         self.file_name = kwargs.get('file_name')
         self.post: Optional[Post] = None
 
+    def __eq__(self, other):
+        """Check if the IDs of the Photo objects are equal."""
+        if not isinstance(other, Photo):
+            return NotImplemented
+
+        return self.id == other.id
+
+    def __ne__(self, other):
+        """Check if the IDs of the Photo objects are not equal."""
+        return not self == other
+
+    def __str__(self):
+        """Returns the file name."""
+        return f"{self.file_name}"

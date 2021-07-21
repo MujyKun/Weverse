@@ -12,6 +12,20 @@ class Artist:
 
     The information retrieved on an Artist is directly from the Weverse API and altered to fit this class.
 
+    .. container:: operations
+
+        .. describe:: x == y
+
+            Checks if two Artists have the same ID.
+
+        .. describe:: x != y
+
+            Checks if two Artists do not have the same ID.
+
+        .. describe:: str(x)
+
+            Returns the Artist's primary name.
+
     Parameters
     ----------
     id: :class:`int`
@@ -119,3 +133,18 @@ class Artist:
         self.birthday_img_url = kwargs.get('birthday_img_url')
         self.community: Optional[Community] = None
         self.posts = []
+
+    def __eq__(self, other):
+        """Check if the IDs of the Artists are equal."""
+        if not isinstance(other, Artist):
+            return NotImplemented
+
+        return self.id == other.id
+
+    def __ne__(self, other):
+        """Check if the IDs of the Artists are not equal."""
+        return not self == other
+
+    def __str__(self):
+        """Returns the Primary Artist Name."""
+        return f"{self.name}"

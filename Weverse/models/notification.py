@@ -12,9 +12,11 @@ class Notification:
     .. container:: operations
 
         .. describe:: x == y
+
             Checks if two Notifications have the same ID.
 
         .. describe:: x != y
+
             Checks if two Notifications do not have the same ID.
 
     Parameters
@@ -104,4 +106,5 @@ class Notification:
         return self.id == other.id
 
     def __ne__(self, other):
+        """Check if the IDs of the Notifications are not equal."""
         return not self == other

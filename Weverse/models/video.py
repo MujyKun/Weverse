@@ -14,6 +14,24 @@ class Video:
 
     Videos do not have unique IDs.
 
+    .. container:: operations
+
+        .. describe:: x == y
+
+            Check if the Video URL and Post are the same.
+
+        .. describe:: x != y
+
+            Check if the Video objects are not equal.
+
+        .. describe:: str(x)
+
+            Returns the Video URL.
+
+        .. describe:: len(x)
+
+            Returns the length of the video in seconds.
+
     Parameters
     ----------
     video_url: int
@@ -50,3 +68,24 @@ class Video:
         self.length = kwargs.get('length')
         self.post: Optional[Post] = None
 
+    def __eq__(self, other):
+        """Check if the Video URL and Post are the same."""
+        if not isinstance(other, Video):
+            return NotImplemented
+
+        video_url_check = self.video_url == other.video_url
+        if other.post and self.post:
+            return video_url_check and (self.post == other.post)
+        return video_url_check
+
+    def __ne__(self, other):
+        """Check if the Video objects are not equal."""
+        return not self == other
+
+    def __str__(self):
+        """Returns the Video URL."""
+        return f"{self.video_url}"
+
+    def __len__(self):
+        """Returns the length of the video in seconds."""
+        return self.length

@@ -11,6 +11,24 @@ class Media:
 
     The information retrieved on Media is directly from the Weverse API and altered to fit this class.
 
+    .. container:: operations
+
+        .. describe:: x == y
+
+            Checks if two Media objects have the same ID.
+
+        .. describe:: x != y
+
+            Checks if two Media objects do not have the same ID.
+
+        .. describe:: str(x)
+
+            Returns the Media body message.
+
+        .. describe:: len(x)
+
+            Returns the amount of images (not videos) in the Media object.
+
     Parameters
     ----------
     id: int
@@ -68,4 +86,21 @@ class Media:
         self.youtube_id = kwargs.get('youtubeId')
         self.photos: List[Photo] = kwargs.get('photo_objects') or []
 
+    def __eq__(self, other):
+        """Check if the IDs of the Media objects are equal."""
+        if not isinstance(other, Media):
+            return NotImplemented
 
+        return self.id == other.id
+
+    def __ne__(self, other):
+        """Check if the IDs of the Media objects are not equal."""
+        return not self == other
+
+    def __str__(self):
+        """Returns the Media body message."""
+        return f"{self.body}"
+
+    def __len__(self):
+        """Returns the amount of images (not videos) available."""
+        return len(self.photos)

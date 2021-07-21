@@ -12,6 +12,20 @@ class Community:
 
     The information retrieved on a Comment is directly from the Weverse API and altered to fit this class.
 
+    .. container:: operations
+
+        .. describe:: x == y
+
+            Checks if two Communities have the same ID.
+
+        .. describe:: x != y
+
+            Checks if two Communities do not have the same ID.
+
+        .. describe:: str(x)
+
+            Returns the Community's name.
+
     Parameters
     ----------
     id: :class:`int`
@@ -76,3 +90,17 @@ class Community:
         self.artists: List[Artist] = []
         self.tabs: List[Tab] = []
 
+    def __eq__(self, other):
+        """Check if the IDs of the Communities are equal."""
+        if not isinstance(other, Community):
+            return NotImplemented
+
+        return self.id == other.id
+
+    def __ne__(self, other):
+        """Check if the IDs of the Communities are not equal."""
+        return not self == other
+
+    def __str__(self):
+        """Returns the Community Name"""
+        return f"{self.name}"
