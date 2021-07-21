@@ -14,7 +14,7 @@ class WeverseClientAsync(WeverseClient):
     loop:
         Asyncio Event Loop
     kwargs:
-        Same as :ref:`Weverse`.
+        Same as :ref:`WeverseClient`.
 
 
     Attributes
