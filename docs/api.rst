@@ -13,15 +13,15 @@ WeverseClient
 Clients
 ========
 
-===========
+=================
 WeverseClientSync
-===========
+=================
 .. autoclass:: Weverse.WeverseClientSync
     :members:
 
-============
+==================
 WeverseClientAsync
-============
+==================
 .. autoclass:: Weverse.WeverseClientAsync
     :members:
 
@@ -42,52 +42,58 @@ Notification
 .. autoclass:: Weverse.models.Notification
     :members:
 
-=========
+=====
 Photo
-=========
+=====
 .. autoclass:: Weverse.models.Photo
     :members:
 
-=========
+=====
 Video
-=========
+=====
 .. autoclass:: Weverse.models.Video
     :members:
 
-=========
+======
 Artist
-=========
+======
 .. autoclass:: Weverse.models.Artist
     :members:
 
-=========
+=======
 Comment
-=========
+=======
 .. autoclass:: Weverse.models.Comment
     :members:
 
-=========
+====
 Post
-=========
+====
 .. autoclass:: Weverse.models.Post
     :members:
 
-=========
+===
 Tab
-=========
+===
 .. autoclass:: Weverse.models.Tab
     :members:
 
-=========
+=====
 Media
-=========
+=====
 .. autoclass:: Weverse.models.Media
+    :members:
+
+============
+Announcement
+============
+.. autoclass:: Weverse.models.Announcement
     :members:
 
 .. _obj_creation:
 
 Model Creation
-===============
+==============
 .. automodule:: Weverse.objects
     :members:
 

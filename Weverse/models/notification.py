@@ -1,6 +1,3 @@
-import discord
-
-
 class Notification:
     r"""A Media object that represents a Weverse Media Post.
 
