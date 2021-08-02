@@ -39,7 +39,7 @@ class WeverseClientSync(WeverseClient):
             If the client is being rate-limited.
         :raises: :class:`Weverse.error.LoginFailed`
             Login process had failed.
-        :raises: :class:`UCube.error.InvalidCredentials`
+        :raises: :class:`Weverse.error.InvalidCredentials`
             If the user credentials were invalid or not provided.
         """
         try:

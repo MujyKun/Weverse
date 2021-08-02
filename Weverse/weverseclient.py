@@ -180,7 +180,7 @@ class WeverseClient:
         ----------
         timeout: int
             Amount of seconds before an exception is raised.
-        :raises: :class:`UCube.error.LoginFailed` Login process had failed.
+        :raises: :class:`Weverse.error.LoginFailed` Login process had failed.
         :raises: :class:`asyncio.exceptions.TimeoutError` Waited too long for a login.
         """
         seconds_passed = 0

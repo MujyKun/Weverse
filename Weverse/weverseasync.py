@@ -52,7 +52,7 @@ class WeverseClientAsync(WeverseClient):
             Login process had failed.
         :raises: :class:`asyncio.exceptions.TimeoutError`
             Waited too long for a login.
-        :raises: :class:`UCube.error.InvalidCredentials`
+        :raises: :class:`Weverse.error.InvalidCredentials`
             If the user credentials were invalid or not provided.
         """
         try:
