@@ -1,1 +1,2 @@
 weverse==1.0.7
+python-dotenv~=0.18.0

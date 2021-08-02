@@ -1,5 +1,4 @@
 aiohttp>=3.6.2
 requests>=2.22.0
 asyncio~=3.4.3
-python-dotenv~=0.18.0
 setuptools~=57.0.0
