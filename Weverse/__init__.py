@@ -10,7 +10,7 @@ from .objects import create_tab_objects, create_community_objects, create_commen
 __title__ = 'Weverse'
 __author__ = 'MujyKun'
 __license__ = 'MIT'
-__version__ = '1.0.7.2'
+__version__ = '1.0.7.3'
 
 
 def check_expired_token(func):
