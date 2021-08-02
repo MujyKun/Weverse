@@ -21,8 +21,15 @@ In order to get a token: https://weverse.readthedocs.io/en/latest/api.html#get-a
 In order to set a token, Rename .env.example to .env and set WEVERSE_AUTH to the token (recommended). 
 You may also set the variable weverse_token to the token (not recommended).
 
+There is also now the availability to login using a usernane and password instead of a token.
+This file will display both auth methods.
+
 If you are running in an Asynchronous environment, go take a look at the Asynchronous examples file.
 """
+
+
+if __name__ == '__main__':
+    ...
 
 
 def get_formatted_time(seconds):
@@ -49,10 +56,26 @@ weverse_token = getenv("WEVERSE_AUTH") or "fake_token"
 
 web_session = requests.sessions.session()  # create a web session for Weverse to use (Not needed, but recommended)
 
+
+def on_new_notifications(notifications: List[models.Notification]):
+    """
+    Decides what to do with a list of Notifications.
+    This is a hook method. Whenever there is a notification, this method will be called.
+    """
+    for notification in notifications:
+        handle_notification(notification)
+
+
+weverse_username = getenv("WEVERSE_USERNAME") or None
+weverse_password = getenv("WEVERSE_PASSWORD") or None
+
 client_kwargs = {
     "verbose": True,  # Will print warning messages for links that have failed to connect or were not found.
     "web_session": web_session,  # Existing web session
-    "authorization": weverse_token  # Auth Token to connect to Weverse
+    "authorization": weverse_token,  # Auth Token to connect to Weverse. Not needed if you are using the login method.
+    "username": weverse_username,  # Username if you are using the login method.
+    "password": weverse_password,  # Password if you are using the login method.
+    "hook": on_new_notifications  # The method that will receive new notifications.
 }
 
 weverse_client = WeverseClientSync(**client_kwargs)
@@ -70,9 +93,9 @@ start_kwargs = {
     "create_media": True
 }
 
-
 # You can actually check if the token works before starting the cache process and receiving an exception.
-token_works = weverse_client.check_token_works()
+# Do not check if you are using a regular login.
+# token_works = weverse_client.check_token_works()
 
 
 try:
@@ -89,8 +112,32 @@ except Exception as e:
     # No other specific exceptions are raised, But we shouldn't ignore any errors.
     raise RuntimeError(f"A different error has occurred. {e}")
 
-
 # We now have all of the data we would want to modify.
+
+
+def loop_notifications():
+    """Check for notifications on a loop.
+
+    THIS IS THE MANUAL WAY TO CHECK FOR NOTIFICATIONS.
+    IT IS RECOMMENDED TO PASS IN A HOOK TO THE CLIENT INSTEAD.
+
+    """
+    continue_loop = True
+    while continue_loop:
+        # This is a loop running to check for notifications.
+        new_notifications = check_new_notifications()
+        if not new_notifications:
+            continue
+
+        for new_notification in new_notifications:
+            handle_notification(new_notification)
+        continue_loop = False  # no longer want to check for notifications.
+
+
+# loop the notifications
+if not weverse_client._hook:  # we are just checking to see if we passed in a hook method
+    loop_notifications()
+
 
 def check_new_notifications() -> Optional[List[models.Notification]]:
     """Check for new weverse notifications.
@@ -115,44 +162,40 @@ def check_new_notifications() -> Optional[List[models.Notification]]:
     return latest_notifications
 
 
-continue_loop = True
-while continue_loop:
-    # This is a loop running to check for notifications.
-    new_notifications = check_new_notifications()
-    if not new_notifications:
-        continue
+def handle_notification(new_notification: models.Notification):
+    # Two ways to determine the community name.
+    community_name = new_notification.community_name or new_notification.bold_element
+    if not community_name:
+        # In the case a notification faults from Weverse, this is a safety measure.
+        return
 
-    for new_notification in new_notifications:
-        # Two ways to determine the community name.
-        community_name = new_notification.community_name or new_notification.bold_element
-        if not community_name:
-            # In the case a notification faults from Weverse, this is a safety measure.
-            continue
+    # We do not know the type of notification it is because it is usually hidden inside the message.
+    # The wrapper does not automatically check for this, so we must call the method.
+    notification_type = weverse_client.determine_notification_type(new_notification.message)
 
-        # We do not know the type of notification it is because it is usually hidden inside the message.
-        # The wrapper does not automatically check for this, so we must call the method.
-        notification_type = weverse_client.determine_notification_type(new_notification.message)
+    possible_notification_types = ["comment", "post", "media", "announcement"]
 
-        possible_notification_types = ["comment", "post", "media", "announcement"]
+    # The content ID is the ID of the actual post we are looking for.
+    content_id = new_notification.contents_id
 
-        # The content ID is the ID of the actual post we are looking for.
-        content_id = new_notification.contents_id
+    # In the below conditions, you should do any logic needed for knowing the types...
+    if notification_type == possible_notification_types[0]:  # comment
+        comment = weverse_client.get_comment_by_id(content_id)
+        ...  # Do stuff with the comment here
+    elif notification_type == possible_notification_types[1]:  # post
+        post = weverse_client.get_post_by_id(content_id)
+        ...  # Do stuff with the post here
+    elif notification_type == possible_notification_types[2]:  # media
+        media = weverse_client.get_media_by_id(content_id)
+        ...  # Do stuff with the media here
+    elif notification_type == possible_notification_types[3]:  # announcement
+        announcement = weverse_client.get_announcement_by_id(content_id)
+        ...  # Do stuff with the announcement here
+    else:  # No Type Found (Perhaps a new type was created but wrapper is not updated)
+        print(f"{new_notification.id} has an unrecognized type.")
 
-        # In the below conditions, you should do any logic needed for knowing the types...
-        if notification_type == possible_notification_types[0]:  # comment
-            comment = weverse_client.get_comment_by_id(content_id)
-            ...  # Do stuff with the comment here
-        elif notification_type == possible_notification_types[1]:  # post
-            post = weverse_client.get_post_by_id(content_id)
-            ...  # Do stuff with the post here
-        elif notification_type == possible_notification_types[2]:  # media
-            media = weverse_client.get_media_by_id(content_id)
-            ...  # Do stuff with the media here
-        elif notification_type == possible_notification_types[3]:  # announcement
-            announcement = weverse_client.get_announcement_by_id(content_id)
-            ...  # Do stuff with the announcement here
-        else:  # No Type Found (Perhaps a new type was created but wrapper is not updated)
-            print(f"{new_notification.id} has an unrecognized type.")
+    ...  # do more stuff if you want to.
 
-        ...  # do more stuff if you want to.
-    continue_loop = False  # no longer want to check for notifications.
+
+
+

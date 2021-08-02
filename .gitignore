@@ -3,3 +3,4 @@ _*/
 dist/
 *.egg-info/
 photos/
+*.env

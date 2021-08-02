@@ -5,12 +5,12 @@ if TYPE_CHECKING:
 
 
 class Community:
-    r"""A Comment object that represents a Weverse Comment that belongs to an Artist.
+    r"""A Community object that represents a Weverse Community.
 
-    It is not suggested to create a Comment manually, but rather through the
-    following method: :class:`Weverse.objects.create_comment_objects`
+    It is not suggested to create a Community manually, but rather through the
+    following method: :class:`Weverse.objects.create_community_objects`
 
-    The information retrieved on a Comment is directly from the Weverse API and altered to fit this class.
+    The information retrieved on a Community is directly from the Weverse API and altered to fit this class.
 
     .. container:: operations
 

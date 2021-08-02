@@ -31,6 +31,8 @@ To install from source:
 ### How to Use
 
 First off, your account token is needed (Will need to be updated about every 6 months iirc).  
+Note that it is now possible to log-in using a username and password without a token. This will prevent manual updates.
+
 
 In order to get your account token, go to [Weverse](https://www.weverse.io/) and Inspect Element (F12).  
 Then go to the `Network` tab and filter by `XHR`. Then refresh your page (F5) and look for `info` or `me` under `XHR`.  
@@ -59,6 +61,8 @@ from Weverse.weverseasync import WeverseClientAsync
 # https://github.com/MujyKun/Weverse/blob/main/examples/asynchronous.py
 
 token = "fake_token"  # REQUIRED
+# THE EXAMPLE IN THE EXAMPLES FOLDER WILL SHOW YOU HOW TO LOGIN WITH A USERNAME AND PASSWORD AND SET UP HOOKS.
+
 # It is advised to pass in your own web session as it is not closed in Weverse 
 web_session = aiohttp.ClientSession()  # A session is created by default 
 weverse_client = WeverseClientAsync(authorization=token, verbose=True, loop=asyncio.get_event_loop(),
@@ -79,6 +83,8 @@ from Weverse.error import InvalidToken
 # https://github.com/MujyKun/Weverse/blob/main/examples/synchronous.py
 
 token = "fake_token"  # REQUIRED
+# THE EXAMPLE IN THE EXAMPLES FOLDER WILL SHOW YOU HOW TO LOGIN WITH A USERNAME AND PASSWORD AND SET UP HOOKS.
+
 # It is advised to pass in your own web session as it is not closed in Weverse
 web_session = requests.Session()  # A session is created by default 
 weverse_client = WeverseClientSync(authorization=token, verbose=True)

@@ -1,10 +1,12 @@
 import json
-from typing import Optional
+import time
+from typing import Optional, List
 
 import requests
 from .models import Community, Post as w_Post, Notification, Announcement
 from . import WeverseClient, create_post_objects, create_community_objects, create_notification_objects, \
-    create_comment_objects, create_media_object, iterate_community_media_categories, create_announcement_object
+    create_comment_objects, create_media_object, iterate_community_media_categories, create_announcement_object, \
+    InvalidCredentials, LoginFailed, InvalidToken, NoHookFound, check_expired_token
 
 
 class WeverseClientSync(WeverseClient):
@@ -32,11 +34,26 @@ class WeverseClientSync(WeverseClient):
         :parameter create_media: (:class:`bool`) Whether to create/update cache for old media.
 
         :raises: :class:`Weverse.error.InvalidToken`
+            If the token was invalid.
         :raises: :class:`Weverse.error.BeingRateLimited`
+            If the client is being rate-limited.
+        :raises: :class:`Weverse.error.LoginFailed`
+            Login process had failed.
+        :raises: :class:`UCube.error.InvalidCredentials`
+            If the user credentials were invalid or not provided.
         """
         try:
             if not self.web_session:
                 self.web_session = requests.Session()
+
+            if not self._login_info_exists and not self._token_exists:
+                raise InvalidCredentials
+
+            if self._login_info_exists:
+                self._try_login()
+
+            if not self.check_token_works():
+                raise InvalidToken
 
             # create all communities that are subscribed to
             self.create_communities()  # communities should be created no matter what
@@ -57,9 +74,93 @@ class WeverseClientSync(WeverseClient):
                     self.create_media(community)
 
             self.cache_loaded = True
+
+            if self._hook:
+                if self.verbose:
+                    print("Starting Notification Loop for Weverse Client.")
+                self._start_loop_for_hook()
         except Exception as err:
             raise err
 
+    def _start_loop_for_hook(self):
+        """
+        Start checking for new notifications in a new loop and call the hook with the list of new Notifications
+        This will also create the posts associated with the notification so they can be used efficiently.
+        """
+        if not self._hook:
+            raise NoHookFound
+
+        self._hook_loop = True
+        while self._hook_loop:
+            time.sleep(30)
+            new_notifications = self._check_new_notifications()
+            if not new_notifications:
+                continue
+
+            self._hook(new_notifications)
+
+    def _try_login(self):
+        """
+        Will attempt to login to Weverse and set refresh token and token.
+        """
+        self._login(self.__process_login)
+
+    def __process_login(self, login_payload: dict):
+        """
+        Will process login credentials and set refresh token and token.
+        Parameters
+        ----------
+        login_payload: dict
+            The client's login payload
+        """
+        with self.web_session.post(url=self._login_url, json=login_payload) as resp:
+            if self.check_status(resp.status_code, self._login_url):
+                data = json.loads(resp.text)
+                refresh_token = data.get("refresh_token")
+                token = data.get("access_token")
+                if refresh_token:
+                    self._set_refresh_token(refresh_token)
+                if token:
+                    self._set_token(token)
+                self.expired_token = False
+                return
+        raise LoginFailed
+
+    def _refresh_token(self):
+        """
+        Refresh a token while logged in.
+        """
+        with self.web_session.post(url=self._login_url, json=self._refresh_payload) as resp:
+            if self.check_status(resp.status_code, self._login_url):
+                data = json.loads(resp.text)
+                token = data.get("access_token")
+                if token:
+                    self._set_token(token)
+                self.expired_token = False
+                return
+        self._set_refresh_token("")  # resetting refresh token.
+        self._try_login()  # will attempt to log in again.
+
+    @check_expired_token
+    def _check_new_notifications(self) -> List[Notification]:
+        """
+        Checks and returns new notifications.
+        Compares with the already existing notifications.
+        This will also create the posts associated with the notification so they can be used efficiently.
+        This is a coroutine and must be awaited.
+
+        Returns
+        -------
+        A list of new Notifications.: List[:class:`models.Notification`]
+        """
+        all_new_notifications = []
+
+        if self.check_new_user_notifications():
+
+            all_new_notifications = self.get_new_notifications()
+        return all_new_notifications
+
+    @check_expired_token
     def create_media(self, community: Community):
         """Paginate through a community's media and add it to object cache.
 
@@ -74,12 +175,13 @@ class WeverseClientSync(WeverseClient):
                 # This endpoint does NOT give us any information about the photos, therefore we must make
                 # a separate api call to retrieve proper photo information for the photo media.
                 for media in photo_media_dicts:
-                    media_obj = self.fetch_media(community.id, media.id)
+                    media_obj = self.fetch_media(community.id, media.get("id"))
                     if media_obj:
                         media_objects.append(media_obj)
 
                 self._add_media_to_cache(media_objects)
 
+    @check_expired_token
     def create_communities(self):
         """Get and Create the communities the logged in user has access to."""
         with self.web_session.get(self._api_communities_url, headers=self._headers) as resp:
@@ -89,6 +191,7 @@ class WeverseClientSync(WeverseClient):
                 user_communities = response_text_as_dict.get("communities")
                 self.all_communities = create_community_objects(user_communities)
 
+    @check_expired_token
     def create_community_artists_and_tabs(self):
         """Create the community artists and tabs and add them to their respective communities."""
         for community in self.all_communities.values():
@@ -103,6 +206,7 @@ class WeverseClientSync(WeverseClient):
                     for tab in community.tabs:
                         self.all_tabs[tab.id] = tab
 
+    @check_expired_token
     def create_posts(self, community: Community, next_page_id: int = None):
         """Paginate through a community's posts and add it to object cache.
 
@@ -129,6 +233,7 @@ class WeverseClientSync(WeverseClient):
                 if not response_text_as_dict.get('isEnded'):
                     self.create_posts(community, response_text_as_dict.get('lastId'))
 
+    @check_expired_token
     def create_post(self, community: Community, post_id) -> w_Post:
         """Create a post and update the cache with it. This is meant for an individual post.
 
@@ -142,6 +247,7 @@ class WeverseClientSync(WeverseClient):
                 response_text_as_dict = json.loads(response_text)
                 return (create_post_objects([response_text_as_dict], community, new=True))[0]
 
+    @check_expired_token
     def get_user_notifications(self):
         """Get a list of updated user notification objects.
 
@@ -156,6 +262,7 @@ class WeverseClientSync(WeverseClient):
                     self.all_notifications[user_notification.id] = user_notification
                 return self.user_notifications
 
+    @check_expired_token
     def check_new_user_notifications(self):
         """Checks if there is a new user notification, updates the cache, and returns if there was.
 
@@ -175,6 +282,7 @@ class WeverseClientSync(WeverseClient):
                     self.cache_loaded = True
                 return has_new
 
+    @check_expired_token
     def translate(self, post_or_comment_id, is_post=False, is_comment=False, p_obj=None, community_id=None):
         """Translates a post or comment, must set post or comment to True.
 
@@ -216,6 +324,7 @@ class WeverseClientSync(WeverseClient):
                 response_text_as_dict = json.loads(response_text)
                 return response_text_as_dict.get('translation')
 
+    @check_expired_token
     def fetch_artist_comments(self, community_id, post_id):
         """Fetches the artist comments on a post.
 
@@ -230,6 +339,7 @@ class WeverseClientSync(WeverseClient):
                 response_text_as_dict = json.loads(response_text)
                 return create_comment_objects(response_text_as_dict.get('artistComments'))
 
+    @check_expired_token
     def fetch_comment_body(self, community_id, comment_id):
         """Fetches a comment from its ID.
 
@@ -244,6 +354,7 @@ class WeverseClientSync(WeverseClient):
                 response_text_as_dict = json.loads(response_text)
                 return response_text_as_dict.get('body')
 
+    @check_expired_token
     def fetch_media(self, community_id, media_id):
         """Receive media object based on media id.
 
@@ -258,6 +369,7 @@ class WeverseClientSync(WeverseClient):
                 response_text_as_dict = json.loads(response_text)
                 return create_media_object(response_text_as_dict.get('media'))
 
+    @check_expired_token
     def fetch_announcement(self, community_id: int, announcement_id: int) -> Optional[Announcement]:
         """Receive announcement object based on announcement id.
 
@@ -312,10 +424,11 @@ class WeverseClientSync(WeverseClient):
         elif notification_type == 'media':
             media = self.fetch_media(community.id, notification.contents_id)
             if media:
-                self.new_media.insert(0, media)
                 self.all_media[media.id] = media
         elif notification_type == 'announcement':
-            return  # not keeping track of announcements in cache ATM
+            announcement = self.fetch_announcement(community.id, notification.contents_id)
+            if announcement:
+                self.all_announcements[announcement.id] = announcement
 
     def check_token_works(self):
         """
@@ -324,4 +437,5 @@ class WeverseClientSync(WeverseClient):
         :returns: (:class:`bool`) True if the token works.
         """
         with self.web_session.get(url=self._user_endpoint, headers=self._headers) as resp:
-            return resp.status_code == 200
+            self._expired_token = not resp.status_code == 200
+            return not self._expired_token

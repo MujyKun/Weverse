@@ -22,6 +22,9 @@ In order to get a token: https://weverse.readthedocs.io/en/latest/api.html#get-a
 In order to set a token, Rename .env.example to .env and set WEVERSE_AUTH to the token (recommended). 
 You may also set the variable weverse_token to the token (not recommended).
 
+There is also now the availability to login using a usernane and password instead of a token.
+This file will display both auth methods.
+
 If you are running in a Synchronous environment, go take a look at the Synchronous examples file.
 """
 
@@ -79,12 +82,20 @@ class Example:
 
         weverse_token = getenv("WEVERSE_AUTH") or "fake_token"
 
+        # you have the option to pass in a token or a username and password.
+        weverse_username = getenv("WEVERSE_USERNAME") or None
+        weverse_password = getenv("WEVERSE_PASSWORD") or None
+
         web_session = aiohttp.ClientSession()  # create a web session for Weverse to use (Not needed, but recommended)
 
         client_kwargs = {
             "verbose": True,  # Will print warning messages for links that have failed to connect or were not found.
             "web_session": web_session,  # Existing web session
-            "authorization": weverse_token,  # Auth Token to connect to Weverse
+            # Auth Token to connect to Weverse. Not needed if you are using the login method.
+            "authorization": weverse_token,
+            "username": weverse_username,  # Username if you are using the login method.
+            "password": weverse_password,  # Password if you are using the login method.
+            "hook": self.on_new_notifications,  # The method that will receive new notifications.
             "loop": asyncio.get_event_loop()  # current event loop
         }
 
@@ -103,7 +114,8 @@ class Example:
         }
 
         # You can actually check if the token works before starting the cache process and receiving an exception.
-        token_works = await self.weverse_client.check_token_works()
+        # If you are using a normal login, do not check.
+        # token_works = await self.weverse_client.check_token_works()
 
         try:
             print("Weverse cache is currently being created.")
@@ -116,15 +128,20 @@ class Example:
         except BeingRateLimited:
             raise RuntimeError("Weverse Client is being rate-limited.")  # Note that this issue has never occurred yet.
         except Exception as e:
-            # No other specific exceptions are raised, But we shouldn't ignore any errors.
-            raise RuntimeError(f"A different error has occurred. {e}")
+            raise e  # more exceptions regarding incorrect logins would be raised.
         # We now have all of the data we would want to modify.
 
         # loop the notifications
-        await self.loop_notifications()
+        if not self.weverse_client._hook:  # we are just checking to see if we passed in a hook method
+            await self.loop_notifications()
 
     async def loop_notifications(self):
-        """Check for notifications on a loop."""
+        """Check for notifications on a loop.
+
+        THIS IS THE MANUAL WAY TO CHECK FOR NOTIFICATIONS.
+        IT IS RECOMMENDED TO PASS IN A HOOK TO THE CLIENT INSTEAD.
+
+        """
         continue_loop = True
         while continue_loop:  # Just a warning that this would block if not under it's own task.
             # This is a loop running to check for notifications.
@@ -134,39 +151,52 @@ class Example:
                 continue
 
             for new_notification in new_notifications:
-                # Two ways to determine the community name.
-                community_name = new_notification.community_name or new_notification.bold_element
-                if not community_name:
-                    # In the case a notification faults from Weverse, this is a safety measure.
-                    continue
+                await self.handle_notification(new_notification)
 
-                # We do not know the type of notification it is because it is usually hidden inside the message.
-                # The wrapper does not automatically check for this, so we must call the method.
-                notification_type = self.weverse_client.determine_notification_type(new_notification.message)
-
-                possible_notification_types = ["comment", "post", "media", "announcement"]
-
-                # The content ID is the ID of the actual post we are looking for.
-                content_id = new_notification.contents_id
-
-                # In the below conditions, you should do any logic needed for knowing the types...
-                if notification_type == possible_notification_types[0]:  # comment
-                    comment = self.weverse_client.get_comment_by_id(content_id)
-                    ...  # Do stuff with the comment here
-                elif notification_type == possible_notification_types[1]:  # post
-                    post = self.weverse_client.get_post_by_id(content_id)
-                    ...  # Do stuff with the post here
-                elif notification_type == possible_notification_types[2]:  # media
-                    media = self.weverse_client.get_media_by_id(content_id)
-                    ...  # Do stuff with the media here
-                elif notification_type == possible_notification_types[3]:  # announcement
-                    announcement = self.weverse_client.get_announcement_by_id(content_id)
-                    ...  # Do stuff with the announcement here
-                else:  # No Type Found (Perhaps a new type was created but wrapper is not updated)
-                    print(f"{new_notification.id} has an unrecognized type.")
-
-                ...  # do more stuff if you want to.
             continue_loop = False  # no longer want to check for notifications.
+
+    async def on_new_notifications(self, notifications: List[models.Notification]):
+        """
+        Decides what to do with a list of Notifications.
+        This is a hook method. Whenever there is a notification, this method will be called.
+        """
+        for notification in notifications:
+            await self.handle_notification(notification)
+
+    async def handle_notification(self, new_notification: models.Notification):
+        """Handle a notification."""
+        # Two ways to determine the community name.
+        community_name = new_notification.community_name or new_notification.bold_element
+        if not community_name:
+            # In the case a notification faults from Weverse, this is a safety measure.
+            return
+
+        # We do not know the type of notification it is because it is usually hidden inside the message.
+        # The wrapper does not automatically check for this, so we must call the method.
+        notification_type = self.weverse_client.determine_notification_type(new_notification.message)
+
+        possible_notification_types = ["comment", "post", "media", "announcement"]
+
+        # The content ID is the ID of the actual post we are looking for.
+        content_id = new_notification.contents_id
+
+        # In the below conditions, you should do any logic needed for knowing the types...
+        if notification_type == possible_notification_types[0]:  # comment
+            comment = self.weverse_client.get_comment_by_id(content_id)
+            ...  # Do stuff with the comment here
+        elif notification_type == possible_notification_types[1]:  # post
+            post = self.weverse_client.get_post_by_id(content_id)
+            ...  # Do stuff with the post here
+        elif notification_type == possible_notification_types[2]:  # media
+            media = self.weverse_client.get_media_by_id(content_id)
+            ...  # Do stuff with the media here
+        elif notification_type == possible_notification_types[3]:  # announcement
+            announcement = self.weverse_client.get_announcement_by_id(content_id)
+            ...  # Do stuff with the announcement here
+        else:  # No Type Found (Perhaps a new type was created but wrapper is not updated)
+            print(f"{new_notification.id} has an unrecognized type.")
+
+        ...  # do more stuff if you want to.
 
 
 if __name__ == '__main__':

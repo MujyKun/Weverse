@@ -1,10 +1,12 @@
-from typing import Optional
+import asyncio
+from typing import Optional, List
 
 import aiohttp
 from asyncio import get_event_loop
 from .models import Community, Post as w_Post, Notification, Announcement, Media
 from . import WeverseClient, create_post_objects, create_community_objects, create_notification_objects, \
-    create_comment_objects, create_media_object, iterate_community_media_categories, create_announcement_object
+    create_comment_objects, create_media_object, iterate_community_media_categories, create_announcement_object, \
+    InvalidCredentials, LoginFailed, InvalidToken, NoHookFound, check_expired_token
 
 
 class WeverseClientAsync(WeverseClient):
@@ -43,11 +45,29 @@ class WeverseClientAsync(WeverseClient):
         :parameter create_media: (:class:`bool`) Whether to create/update cache for old media.
 
         :raises: :class:`Weverse.error.InvalidToken`
+            If the token was invalid.
         :raises: :class:`Weverse.error.BeingRateLimited`
+            If the client is being rate-limited.
+        :raises: :class:`Weverse.error.LoginFailed`
+            Login process had failed.
+        :raises: :class:`asyncio.exceptions.TimeoutError`
+            Waited too long for a login.
+        :raises: :class:`UCube.error.InvalidCredentials`
+            If the user credentials were invalid or not provided.
         """
         try:
             if not self.web_session:
                 self.web_session = aiohttp.ClientSession()
+
+            if not self._login_info_exists and not self._token_exists:
+                raise InvalidCredentials
+
+            if self._login_info_exists:
+                await self._try_login()
+                await self._wait_for_login()  # wait for login or an exception to occur.
+
+            if not await self.check_token_works():
+                raise InvalidToken
 
             # create all communities that are subscribed to
             await self.create_communities()  # communities should be created no matter what
@@ -69,9 +89,104 @@ class WeverseClientAsync(WeverseClient):
                     await self.create_media(community)
 
             self.cache_loaded = True
+
+            if self._hook:
+                if self.verbose:
+                    print("Starting Notification Loop for Weverse Client.")
+                await self._start_loop_for_hook()
         except Exception as err:
             raise err
 
+    async def _start_loop_for_hook(self):
+        """
+        Start checking for new notifications in a new loop and call the hook with the list of new Notifications
+        This will also create the posts associated with the notification so they can be used efficiently.
+        This is a coroutine and must be awaited.
+        """
+        if not self._hook:
+            raise NoHookFound
+
+        self._hook_loop = True
+        while self._hook_loop:
+            await asyncio.sleep(30)
+            new_notifications = await self._check_new_notifications()
+            if not new_notifications:
+                continue
+
+            if not asyncio.iscoroutinefunction(self._hook):
+                self._hook(new_notifications)
+            else:
+                await self._hook(new_notifications)
+
+    @check_expired_token
+    async def _check_new_notifications(self) -> List[Notification]:
+        """
+        Checks and returns new notifications.
+        Compares with the already existing notifications.
+        This will also create the posts associated with the notification so they can be used efficiently.
+        This is a coroutine and must be awaited.
+
+        Returns
+        -------
+        A list of new Notifications.: List[:class:`models.Notification`]
+        """
+        all_new_notifications = []
+
+        if self._safe_to_check and await self.check_new_user_notifications():
+
+            while not self._safe_to_check:
+                await asyncio.sleep(1)
+
+            all_new_notifications = self.get_new_notifications()
+        return all_new_notifications
+
+    async def _try_login(self):
+        """
+        Will attempt to login to Weverse and set refresh token and token.
+        This is a coroutine and must be awaited.
+        """
+        self._login(self.__process_login)
+
+    async def __process_login(self, login_payload: dict):
+        """
+        Will process login credentials and set refresh token and token.
+        This is a coroutine and must be awaited.
+        Parameters
+        ----------
+        login_payload: dict
+            The client's login payload
+        """
+        async with self.web_session.post(url=self._login_url, json=login_payload) as resp:
+            if self.check_status(resp.status, self._login_url):
+                data = await resp.json()
+                refresh_token = data.get("refresh_token")
+                token = data.get("access_token")
+                if refresh_token:
+                    self._set_refresh_token(refresh_token)
+                if token:
+                    self._set_token(token)
+                self.expired_token = False
+                return
+        self._set_exception(LoginFailed())
+
+    async def _refresh_token(self):
+        """
+        Refresh a token while logged in.
+
+        This is a coroutine and must be awaited.
+
+        """
+        async with self.web_session.post(url=self._login_url, json=self._refresh_payload) as resp:
+            if self.check_status(resp.status, self._login_url):
+                data = await resp.json()
+                token = data.get("access_token")
+                if token:
+                    self._set_token(token)
+                self.expired_token = False
+                return
+        self._set_exception(LoginFailed())
+
+    @check_expired_token
     async def create_media(self, community: Community):
         """Paginate through a community's media and add it to object cache.
 
@@ -92,6 +207,7 @@ class WeverseClientAsync(WeverseClient):
 
                 self._add_media_to_cache(media_objects)
 
+    @check_expired_token
     async def create_communities(self):
         """Get and Create the communities the logged in user has access to.
 
@@ -103,6 +219,7 @@ class WeverseClientAsync(WeverseClient):
                 user_communities = data.get("communities")
                 self.all_communities = create_community_objects(user_communities)
 
+    @check_expired_token
     async def create_community_artists_and_tabs(self):
         """Create the community artists and tabs and add them to their respective communities.
 
@@ -119,6 +236,7 @@ class WeverseClientAsync(WeverseClient):
                     for tab in community.tabs:
                         self.all_tabs[tab.id] = tab
 
+    @check_expired_token
     async def create_posts(self, community: Community, next_page_id: int = None):
         """Paginate through a community's posts and add it to object cache.
 
@@ -147,6 +265,7 @@ class WeverseClientAsync(WeverseClient):
                 if not data.get('isEnded'):
                     await self.create_posts(community, data.get('lastId'))
 
+    @check_expired_token
     async def create_post(self, community: Community, post_id) -> w_Post:
         """Create a post and update the cache with it. This is meant for an individual post.
 
@@ -161,6 +280,7 @@ class WeverseClientAsync(WeverseClient):
                 data = await resp.json()
                 return (create_post_objects([data], community, new=True))[0]
 
+    @check_expired_token
     async def get_user_notifications(self):
         """Get a list of updated user notification objects.
 
@@ -178,6 +298,7 @@ class WeverseClientAsync(WeverseClient):
                     self.all_notifications[user_notification.id] = user_notification
                 return self.user_notifications
 
+    @check_expired_token
     async def check_new_user_notifications(self) -> bool:
         """Checks if there is a new user notification, updates the cache, and returns if there was.
 
@@ -185,6 +306,8 @@ class WeverseClientAsync(WeverseClient):
 
         :returns: (:class:`bool`) Whether there is a new notification.
         """
+        self._safe_to_check = False
+
         async with self.web_session.get(self._api_new_notifications_url, headers=self._headers) as resp:
             if self.check_status(resp.status, self._api_new_notifications_url):
                 data = await resp.json()
@@ -198,6 +321,7 @@ class WeverseClientAsync(WeverseClient):
                     self.cache_loaded = True
                 return has_new
 
+    @check_expired_token
     async def translate(self, post_or_comment_id, is_post=False, is_comment=False, p_obj=None, community_id=None):
         """Translates a post or comment, must set post or comment to True.
 
@@ -240,6 +364,7 @@ class WeverseClientAsync(WeverseClient):
                 data = await resp.json()
                 return data.get('translation')
 
+    @check_expired_token
     async def fetch_artist_comments(self, community_id, post_id):
         """Fetches the artist comments on a post.
 
@@ -255,6 +380,7 @@ class WeverseClientAsync(WeverseClient):
                 data = await resp.json()
                 return create_comment_objects(data.get('artistComments'))
 
+    @check_expired_token
     async def fetch_comment_body(self, community_id, comment_id) -> str:
         """Fetches a comment from its ID.
 
@@ -270,6 +396,7 @@ class WeverseClientAsync(WeverseClient):
                 data = await resp.json()
                 return data.get('body')
 
+    @check_expired_token
     async def fetch_media(self, community_id, media_id) -> Optional[Media]:
         """Receive media object based on media id.
 
@@ -285,6 +412,7 @@ class WeverseClientAsync(WeverseClient):
                 data = await resp.json()
                 return create_media_object(data.get('media'))
 
+    @check_expired_token
     async def fetch_announcement(self, community_id: int, announcement_id: int) -> Optional[Announcement]:
         """Receive announcement object based on announcement id.
 
@@ -313,6 +441,7 @@ class WeverseClientAsync(WeverseClient):
 
             for notification in self.get_new_notifications():
                 await self.__manage_notification_posts(notification)
+            self._safe_to_check = True
         except Exception as e:
             if self.verbose:
                 print(f"Failed to update Weverse Cache - {e}")
@@ -359,4 +488,5 @@ class WeverseClientAsync(WeverseClient):
         :returns: (:class:`bool`) True if the token works.
         """
         async with self.web_session.get(url=self._user_endpoint, headers=self._headers) as resp:
-            return resp.status == 200
+            self._expired_token = not resp.status == 200
+            return not self._expired_token

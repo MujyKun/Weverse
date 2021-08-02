@@ -1,9 +1,14 @@
-from typing import List, Optional, Union
+import asyncio
+from typing import List, Optional, Union, Dict
 
-from . import create_artist_objects, create_tab_objects, InvalidToken
+from . import create_artist_objects, create_tab_objects, InvalidToken, LoginFailed
 from .models import Artist as w_Artist, \
     Comment as w_Comment, Media as w_Media, Notification as w_Notification, Photo as w_Photo, Post as w_Post, \
     Tab as w_Tab, Community as w_Community, Video as w_Video, Announcement as w_Announcement
+
+from base64 import b64decode, b64encode
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
 
 
 class WeverseClient:
@@ -20,8 +25,16 @@ class WeverseClient:
         Whether to print out verbose messages.
     web_session:
         An aiohttp or requests client session.
-    token:
-        The account token to connect to the Weverse API. In order to find your token, please refer to :ref:`account_token`
+    authorization: :class:`str`
+        The account token to connect to the Weverse API. In order to find your token,
+        please refer to :ref:`account_token`
+    username: :class:`str`
+        The email or username associated with the account.
+    password: :class:`str`
+        The password associated with the account.
+    hook:
+        A passed in method that will be called every time there is a new notification.
+        This method must take in a list of :class:`models.Notification` objects.
 
     Attributes
     -----------
@@ -60,12 +73,26 @@ class WeverseClient:
     def __init__(self, **kwargs):
         self.verbose = kwargs.get('verbose')
         self.web_session = kwargs.get('web_session')
-        self._token = kwargs.get('authorization')
+        self.__token = kwargs.get('authorization')
         self.user_notifications = []
 
         self._old_notifications = []
-        self._headers = {'Authorization': f"Bearer {self._token}"}
+        self._headers = self.__get_headers()
 
+        self.__login_payload = {
+            "grant_type": "password",
+            "client_id": "weverse-test",
+            "username": kwargs.get("username"),
+            "password": self.__get_encrypted_password(kwargs.get("password"))
+        }
+
+        self._refresh_payload = {
+            "grant_type": "refresh_token",
+            "client_id": "weverse-test",
+            "refresh_token": None
+        }
+
+        self._login_url = "https://accountapi.weverse.io/api/v1/oauth/token"
         self._api_url = "https://weversewebapi.weverse.io/wapi/v1/"
         self._api_communities_url = self._api_url + "communities/"  # endpoint for communities
         self._api_notifications_url = self._api_url + "stream/notifications/"  # endpoint for user notifications
@@ -80,17 +107,95 @@ class WeverseClient:
         self.cache_loaded = False
         self._user_endpoint = "https://weversewebapi.weverse.io/wapi/v1/users/me"
 
-        self.all_posts = {}
-        self.all_artists = {}
-        self.all_comments = {}
-        self.all_notifications = {}
-        self.all_photos = {}
-        self.all_communities = {}
-        self.all_media = {}
-        self.all_tabs = {}
+        self.all_posts: Dict[int, w_Post] = {}
+        self.all_artists: Dict[int, w_Artist] = {}
+        self.all_comments: Dict[int, w_Comment] = {}
+        self.all_notifications: Dict[int, w_Notification] = {}
+        self.all_photos: Dict[int, w_Photo] = {}
+        self.all_communities: Dict[int, w_Community] = {}
+        self.all_media: Dict[int, w_Media] = {}
+        self.all_tabs: Dict[int, w_Tab] = {}
         # Videos have the url as the key due to no unique ID.
-        self.all_videos = {}
-        self.all_announcements = {}
+        self.all_videos: Dict[str, w_Video] = {}
+        self.all_announcements: Dict[int, w_Announcement] = {}
+
+        self._hook = kwargs.get("hook")
+        self._hook_loop = False
+        self._expired_token = False
+        self._safe_to_check = True  # used for async, can remain under base client.
+        self.__exception_to_raise = None
+
+    @property
+    def _login_info_exists(self) -> bool:
+        """Whether login info is present."""
+        return self.__login_payload["username"] and self.__login_payload["password"]
+
+    @property
+    def _token_exists(self) -> bool:
+        """Whether a token is present."""
+        return bool(self.__token)
+
+    @property
+    def _refresh_token_exists(self) -> bool:
+        """Whether a refresh token is present."""
+        return bool(self._refresh_payload["refresh_token"])
+
+    @property
+    def public_weverse_key(self) -> str:
+        """Hard-coded weverse key"""
+        return "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu/OhimOynajYomJmBsNvQxSDwekunsp986l7s/zMN/8jHXFlTqT79ZOsOwzVdZcKnkWYXwJg4nhIFpaIsPzklQCImp2kfKUJQV3jzw7/Qtq6NrOOh9YBADr+b99SHYcc7E7cDHjGXgWlC5jEI9h80R822wBU0HcbODkAQ3uosvFhSq3gLpxwdimesZofkJ5ZbAmGIMj1GEWAfMGA49mxkv/cDFWry+6FM4mUW6A0301QUg4wK/8n6RrzRj1NUkevZj1smizHeqmBE+0BU5H/fR9HclErx3LMHlVlxSgEEEjNUx3B0bLO0OHppmEb4B3Tk1O3ZsquYyqZyb2lBTbrQwIDAQAB"
+
+    def stop(self):
+        """Stop the hook loop."""
+        self._hook_loop = False
+
+    def _login(self, method):
+        """
+        Requests a login.
+        Will not return response.
+        The method should handle the response itself.
+        Parameters
+        ----------
+        method:
+            The async/sync method to call. Should be able to take in the login payload.
+        """
+        if not asyncio.iscoroutinefunction(method):
+            method(self.__login_payload)
+        else:
+            asyncio.create_task(method(self.__login_payload))
+
+    def _set_exception(self, exception: Exception):
+        """
+        Set an exception from a task that occurred.
+        Parameters
+        ----------
+        exception: The Exception that was raised.
+        """
+        self.__exception_to_raise = exception
+
+    async def _wait_for_login(self, timeout=15):
+        """
+        Will wait until the client is logged in or the timeout timer is exceed.
+        Parameters
+        ----------
+        timeout: int
+            Amount of seconds before an exception is raised.
+        :raises: :class:`UCube.error.LoginFailed` Login process had failed.
+        :raises: :class:`asyncio.exceptions.TimeoutError` Waited too long for a login.
+        """
+        seconds_passed = 0
+        while not self._refresh_token_exists or self._expired_token:
+            if self.__exception_to_raise:
+                if isinstance(self.__exception_to_raise, (LoginFailed, asyncio.exceptions.TimeoutError)):
+                    exception = self.__exception_to_raise
+                    self.__exception_to_raise = None
+                    # if an exception was raised from here, the actual exception occurred in a task.
+                    raise exception
+            await asyncio.sleep(1)
+            seconds_passed += 1
+
+            if seconds_passed > timeout:
+                self._set_exception(asyncio.exceptions.TimeoutError())
 
     def get_new_notifications(self) -> List[w_Notification]:
         """Will get the new notifications from the last notification check.
@@ -113,7 +218,8 @@ class WeverseClient:
         if status == 200:
             return True
         elif status == 401:
-            raise InvalidToken
+            self._expired_token = True
+            # raise InvalidToken
         elif status == 404:
             if self.verbose:
                 # raise error.PageNotFound
@@ -247,6 +353,48 @@ class WeverseClient:
             if media.photos:
                 for photo in media.photos:
                     self.all_photos[photo.id] = photo
+
+    def __get_encrypted_password(self, password):
+        """
+        Get the encrypted password from Weverse's public key.
+
+        :param password: The password to encrypt with Weverse's public key.
+        :return: Encrypted password.
+        """
+        if not password:
+            return
+
+        key_der = b64decode(self.public_weverse_key)
+        pub_key = RSA.importKey(key_der)
+        cipher = PKCS1_OAEP.new(pub_key)
+        cipher_text = cipher.encrypt(password.encode())
+        encrypted_pass = b64encode(cipher_text)
+        password = encrypted_pass.decode("utf-8")
+        return password
+
+    def _set_token(self, token):
+        """
+        Set the token used for endpoints.
+        Parameters
+        ----------
+        token: str
+            New token used for endpoints
+        """
+        self.__token = token
+        self._headers = self.__get_headers()  # update headers
+
+    def __get_headers(self):
+        return {'Authorization': f"Bearer {self.__token}"}
+
+    def _set_refresh_token(self, refresh_token: str):
+        """
+        Set the refresh token.
+        Parameters
+        ----------
+        refresh_token: str
+            The refresh token to pass when logging in.
+        """
+        self._refresh_payload["refresh_token"] = refresh_token
 
     @staticmethod
     def determine_notification_type(notification: Union[w_Notification, str]) -> str:
