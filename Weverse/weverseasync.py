@@ -184,7 +184,8 @@ class WeverseClientAsync(WeverseClient):
                     self._set_token(token)
                 self.expired_token = False
                 return
-        self._set_exception(LoginFailed())
+        await self._try_login()
+        await self._wait_for_login()
 
     @check_expired_token
     async def create_media(self, community: Community):
