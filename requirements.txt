@@ -2,3 +2,4 @@ aiohttp>=3.6.2
 requests>=2.22.0
 asyncio~=3.4.3
 setuptools~=57.0.0
+pycrypto==2.6.1
