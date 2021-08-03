@@ -268,8 +268,7 @@ class WeverseClientSync(WeverseClient):
 
         :returns: (:class:`bool`) Whether there is a new notification.
 
-        AS OF AUGUST 3rd 2021, It appears has_new is no longer being used by Weverse themselves.
-        It is unsure if the endpoint still works as it should. It would be recommended to
+        This endpoint has been acting a bit off and not producing accurate results. It would be recommended to
         instantly get new notifications with :ref:`update_cache_from_notification` instead.
         """
         with self.web_session.get(self._api_new_notifications_url, headers=self._headers) as resp:
