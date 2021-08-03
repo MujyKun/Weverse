@@ -109,7 +109,7 @@ class WeverseClientAsync(WeverseClient):
         self._hook_loop = True
         while self._hook_loop:
             await asyncio.sleep(30)
-            new_notifications = await self._check_new_notifications()
+            new_notifications = await self.update_cache_from_notification()
             if not new_notifications:
                 continue
 
@@ -117,28 +117,6 @@ class WeverseClientAsync(WeverseClient):
                 self._hook(new_notifications)
             else:
                 await self._hook(new_notifications)
-
-    @check_expired_token
-    async def _check_new_notifications(self) -> List[Notification]:
-        """
-        Checks and returns new notifications.
-        Compares with the already existing notifications.
-        This will also create the posts associated with the notification so they can be used efficiently.
-        This is a coroutine and must be awaited.
-
-        Returns
-        -------
-        A list of new Notifications.: List[:class:`models.Notification`]
-        """
-        all_new_notifications = []
-
-        if self._safe_to_check and await self.check_new_user_notifications():
-
-            while not self._safe_to_check:
-                await asyncio.sleep(1)
-
-            all_new_notifications = self.get_new_notifications()
-        return all_new_notifications
 
     async def _try_login(self):
         """
@@ -306,9 +284,12 @@ class WeverseClientAsync(WeverseClient):
         This is a coroutine and must be awaited.
 
         :returns: (:class:`bool`) Whether there is a new notification.
-        """
-        self._safe_to_check = False
 
+
+        AS OF AUGUST 3rd 2021, It appears has_new is no longer being used by Weverse themselves.
+        It is unsure if the endpoint still works as it should. It would be recommended to
+        instantly get new notifications with :ref:`update_cache_from_notification` instead.
+        """
         async with self.web_session.get(self._api_new_notifications_url, headers=self._headers) as resp:
             if self.check_status(resp.status, self._api_new_notifications_url):
                 data = await resp.json()
@@ -429,23 +410,29 @@ class WeverseClientAsync(WeverseClient):
                 data = await resp.json()
                 return create_announcement_object(data)
 
-    async def update_cache_from_notification(self):
+    async def update_cache_from_notification(self) -> List[Notification]:
         """Grab a new post based from new notifications and add it to cache.
 
+        Will also return the new notifications found.
+
         This is a coroutine and must be awaited.
+
+        :returns: List[:class:`models.Notification`]
         """
+        new_notifications = []
         try:
             notifications = await self.get_user_notifications()
 
             if not notifications:
-                return
+                return new_notifications
 
-            for notification in self.get_new_notifications():
+            new_notifications = self.get_new_notifications()
+            for notification in new_notifications:
                 await self.__manage_notification_posts(notification)
-            self._safe_to_check = True
         except Exception as e:
             if self.verbose:
                 print(f"Failed to update Weverse Cache - {e}")
+        return new_notifications
 
     async def __manage_notification_posts(self, notification: Notification):
         """Manages the creation of Notification posts and comments.

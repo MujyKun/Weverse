@@ -93,7 +93,7 @@ class WeverseClientSync(WeverseClient):
         self._hook_loop = True
         while self._hook_loop:
             time.sleep(30)
-            new_notifications = self._check_new_notifications()
+            new_notifications = self.update_cache_from_notification()
             if not new_notifications:
                 continue
 
@@ -267,6 +267,10 @@ class WeverseClientSync(WeverseClient):
         """Checks if there is a new user notification, updates the cache, and returns if there was.
 
         :returns: (:class:`bool`) Whether there is a new notification.
+
+        AS OF AUGUST 3rd 2021, It appears has_new is no longer being used by Weverse themselves.
+        It is unsure if the endpoint still works as it should. It would be recommended to
+        instantly get new notifications with :ref:`update_cache_from_notification` instead.
         """
         with self.web_session.get(self._api_new_notifications_url, headers=self._headers) as resp:
             if self.check_status(resp.status_code, self._api_new_notifications_url):
@@ -384,19 +388,27 @@ class WeverseClientSync(WeverseClient):
                 response_text_as_dict = json.loads(response_text)
                 return create_announcement_object(response_text_as_dict)
 
-    def update_cache_from_notification(self):
-        """Grab a new post based from new notifications and add it to cache."""
+    def update_cache_from_notification(self) -> List[Notification]:
+        """Grab a new post based from new notifications and add it to cache.
+
+        Will also return the new notifications found.
+
+        :returns: List[:class:`models.Notification`]
+        """
+        new_notifications = []
         try:
             notifications = self.get_user_notifications()
             if not notifications:
-                return
+                return new_notifications
 
-            for notification in self.get_new_notifications():
+            new_notifications = self.get_new_notifications()
+            for notification in new_notifications:
                 self.__manage_notification_posts(notification)
 
         except Exception as e:
             if self.verbose:
                 print(f"Failed to update Weverse Cache - {e}")
+        return new_notifications
 
     def __manage_notification_posts(self, notification: Notification):
         """

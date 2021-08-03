@@ -122,7 +122,6 @@ class WeverseClient:
         self._hook = kwargs.get("hook")
         self._hook_loop = False
         self._expired_token = False
-        self._safe_to_check = True  # used for async, can remain under base client.
         self.__exception_to_raise = None
 
     @property
@@ -200,7 +199,7 @@ class WeverseClient:
     def get_new_notifications(self) -> List[w_Notification]:
         """Will get the new notifications from the last notification check.
 
-        Should only be used after :ref:`check_new_user_notifications`.
+        Should only be used after :ref:`check_new_user_notifications` OR :ref:`update_cache_from_notification`.
 
         :returns: List[:ref:`Notification`]
         """
