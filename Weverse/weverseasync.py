@@ -1,5 +1,5 @@
 import asyncio
-from typing import Optional, List
+from typing import Optional, List, Union
 
 import aiohttp
 from asyncio import get_event_loop
@@ -30,10 +30,17 @@ class WeverseClientAsync(WeverseClient):
     """
 
     def __init__(self, loop=get_event_loop(), **kwargs):
+        self._follow_new_communities = True
+        self._time_passed: int = 0
+        self._request_payload_for_follow = {
+            "profileNickname": "dhdthtdhtd",
+            "profileImgPath": "https://cdn-contents.weverse.io/static/profile/profile_defalut_img_05.png"
+        }
         self.loop = loop
         super().__init__(**kwargs)
 
-    async def start(self, create_old_posts=False, create_notifications=True, create_media=False):
+    async def start(self, create_old_posts=False, create_notifications=True, create_media=False,
+                    follow_new_communities=True):
         """Creates internal cache.
 
         This is the main process that should be run.
@@ -43,6 +50,8 @@ class WeverseClientAsync(WeverseClient):
         :parameter create_old_posts: (:class:`bool`) Whether to create cache for old posts.
         :parameter create_notifications: (:class:`bool`) Whether to create/update cache for old notifications.
         :parameter create_media: (:class:`bool`) Whether to create/update cache for old media.
+        :param follow_new_communities: bool
+            Check for new communities and automatically follow them.
 
         :raises: :class:`Weverse.error.InvalidToken`
             If the token was invalid.
@@ -68,6 +77,10 @@ class WeverseClientAsync(WeverseClient):
 
             if not await self.check_token_works():
                 raise InvalidToken
+
+            self._follow_new_communities = follow_new_communities
+            if self._follow_new_communities:
+                await self.follow_all_communities
 
             # create all communities that are subscribed to
             await self.create_communities()  # communities should be created no matter what
@@ -108,6 +121,12 @@ class WeverseClientAsync(WeverseClient):
 
         self._hook_loop = True
         while self._hook_loop:
+            if self._follow_new_communities:
+                if self._time_passed == 14400:  # 4 hours in seconds
+                    self._time_passed = 0
+                    await self.follow_all_communities()
+
+                self._time_passed += 30
             await asyncio.sleep(30)
             new_notifications = await self.update_cache_from_notification()
             if not new_notifications:
@@ -196,15 +215,21 @@ class WeverseClientAsync(WeverseClient):
             if self.check_status(resp.status, self._api_communities_url):
                 data = await resp.json()
                 user_communities = data.get("communities")
-                self.all_communities = create_community_objects(user_communities)
+                self.all_communities = create_community_objects(user_communities, self.all_communities)
 
     @check_expired_token
-    async def create_community_artists_and_tabs(self):
+    async def create_community_artists_and_tabs(self, specific_community_ids: List[int] = None):
         """Create the community artists and tabs and add them to their respective communities.
+
+        :param specific_community_ids: List[int]
+            Will only do this list of community ids from the already existing communities.
 
         This is a coroutine and must be awaited.
         """
         for community in self.all_communities.values():
+            if specific_community_ids:
+                if community.id not in specific_community_ids:
+                    continue
             url = self._api_communities_url + str(community.id)
             async with self.web_session.get(url, headers=self._headers) as resp:
                 if self.check_status(resp.status, url):
@@ -408,6 +433,48 @@ class WeverseClientAsync(WeverseClient):
             if self.check_status(resp.status, announcement_url):
                 data = await resp.json()
                 return create_announcement_object(data)
+
+    @check_expired_token
+    async def follow_community(self, community_id: Union[int, str]):
+        r"""
+        Follow a community
+
+        :param community_id: The community ID to follow.
+        """
+        url = self._api_communities_url + str(community_id)
+
+        async with self.web_session.put(url, headers=self._headers, data=self._request_payload_for_follow) as resp:
+            if self.check_status(resp.status, url):
+                if self.verbose:
+                    print(f"Followed {community_id}.")
+
+    @check_expired_token
+    async def follow_all_communities(self):
+        r"""Follow all communities on Weverse"""
+        communities_to_follow = [community_id for community_id in await self.get_all_community_ids() if community_id not in
+                                 self.all_communities]
+        for community_id in communities_to_follow:
+            await self.follow_community(community_id)
+
+        await self.create_communities()
+        await self.create_community_artists_and_tabs(specific_community_ids=communities_to_follow)
+
+    @check_expired_token
+    async def get_all_community_ids(self) -> List[int]:
+        r"""
+        Get all the communities on Weverse.
+
+        :returns: List[int]
+            A list of community ids
+        """
+        url = self._api_url + 'app-properties/key/webCommunityRedirectPath'
+        async with self.web_session.get(url, headers=self._headers) as resp:
+            if self.check_status(resp.status, url):
+                list_of_communities_: dict = await resp.json()
+                return [community_id for community_id, community_name in list_of_communities_.get('communities')]
+        return []
+
+
 
     async def update_cache_from_notification(self) -> List[Notification]:
         """Grab a new post based from new notifications and add it to cache.

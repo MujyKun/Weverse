@@ -1,17 +1,24 @@
-from typing import List
+from typing import List, Dict
 
 from .models import Community, Artist, Tab, Notification, Post, Photo, Comment, Media, Video, Announcement
 
 
-def create_community_objects(current_communities: list) -> dict:
+def create_community_objects(current_communities: list, already_existing: Dict[int, Community] = None) -> dict:
     """Creates community objects based on a list of information sent in and returns the objects.
 
-    :param current_communities: Community information received from endpoint.
+    :param current_communities: A list of communities from the endpoint being followed.
+        Community information received from endpoint.
+    :param already_existing: List[:ref:`Community`]
+        Already existing Communities that should not be replaced.
+
     :returns: dict{community id: :ref:`Community`}
     """
-    community_objects = {}
+    community_objects = {} if not already_existing else already_existing
     if current_communities:
         for community in current_communities:
+            if community.get('id') in community_objects:
+                continue
+
             kwargs = {
                 'community_id': community.get('id'),
                 'name': community.get('name'),
