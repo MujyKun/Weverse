@@ -439,7 +439,8 @@ class WeverseClientAsync(WeverseClient):
         r"""
         Follow a community
 
-        :param community_id: The community ID to follow.
+        :param community_id: Union[int, str]
+            The community ID to follow.
         """
         url = self._api_communities_url + str(community_id)
 
@@ -471,7 +472,7 @@ class WeverseClientAsync(WeverseClient):
         async with self.web_session.get(url, headers=self._headers) as resp:
             if self.check_status(resp.status, url):
                 list_of_communities_: dict = await resp.json()
-                return [community_id for community_id, community_name in list_of_communities_.get('communities')]
+                return [community_info['id'] for community_info in list_of_communities_.get('communities')]
         return []
 
 
