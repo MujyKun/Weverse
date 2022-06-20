@@ -78,15 +78,15 @@ class WeverseClientAsync(WeverseClient):
             if not await self.check_token_works():
                 raise InvalidToken
 
-            self._follow_new_communities = follow_new_communities
-            if self._follow_new_communities:
-                await self.follow_all_communities()
-
             # create all communities that are subscribed to
             await self.create_communities()  # communities should be created no matter what
 
             # create and update community artists and their tabs
             await self.create_community_artists_and_tabs()
+
+            self._follow_new_communities = follow_new_communities
+            if self._follow_new_communities:
+                await self.follow_all_communities()
 
             # create and update user notifications
             if create_notifications:
