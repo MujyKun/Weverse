@@ -457,7 +457,9 @@ class WeverseClientAsync(WeverseClient):
         """
         url = self._api_communities_url + str(community_id)
         self._request_payload_for_follow['profileNickname'] = self.__generate_random_nickname()
-        async with self.web_session.put(url, headers=self._headers, data=dumps_(self._request_payload_for_follow)) as \
+        _headers = self._headers
+        _headers['Content-Type'] = 'application/json'
+        async with self.web_session.put(url, headers=_headers, data=dumps_(self._request_payload_for_follow)) as \
                 resp:
             if resp.status == 400 and attempts < 1:
                 return await self.follow_all_communities(community_id, attempts + 1)
