@@ -65,7 +65,7 @@ class Video:
         self.thumbnail_url = kwargs.get('thumbnail_url')
         self.thumbnail_width = kwargs.get('thumbnail_width')
         self.thumbnail_height = kwargs.get('thumbnail_height')
-        self.playtime = kwargs.get('playtime')
+        self.length = kwargs.get('playtime')
         self.post: Optional[Post] = None
 
     def __eq__(self, other):
