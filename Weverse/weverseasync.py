@@ -32,10 +32,11 @@ class WeverseClientAsync(WeverseClient):
     def __init__(self, loop=get_event_loop(), **kwargs):
         self._follow_new_communities = True
         self._time_passed: int = 0
-        self._request_payload_for_follow = {
+        from json import dumps
+        self._request_payload_for_follow = dumps({
             "profileNickname": "dhdthtdhtd",
             "profileImgPath": "https://cdn-contents.weverse.io/static/profile/profile_defalut_img_05.png"
-        }
+        })
         self.loop = loop
         super().__init__(**kwargs)
 
@@ -474,8 +475,6 @@ class WeverseClientAsync(WeverseClient):
                 list_of_communities_: dict = await resp.json()
                 return [community_info['id'] for community_info in list_of_communities_.get('communities')]
         return []
-
-
 
     async def update_cache_from_notification(self) -> List[Notification]:
         """Grab a new post based from new notifications and add it to cache.
