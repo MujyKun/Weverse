@@ -55,7 +55,7 @@ class Video:
         Width of the thumbnail
     thumbnail_height: int
         Height of the thumbnail.
-    length: int
+    playtime: int
         Duration of the video in seconds.
     post: Optional[Post]
         The Post Object the video belongs to.
@@ -65,7 +65,7 @@ class Video:
         self.thumbnail_url = kwargs.get('thumbnail_url')
         self.thumbnail_width = kwargs.get('thumbnail_width')
         self.thumbnail_height = kwargs.get('thumbnail_height')
-        self.length = kwargs.get('length')
+        self.playtime = kwargs.get('playtime')
         self.post: Optional[Post] = None
 
     def __eq__(self, other):
