@@ -32,11 +32,10 @@ class WeverseClientAsync(WeverseClient):
     def __init__(self, loop=get_event_loop(), **kwargs):
         self._follow_new_communities = True
         self._time_passed: int = 0
-        from json import dumps
-        self._request_payload_for_follow = dumps({
-            "profileNickname": "dhdthtdhtd",
+        self._request_payload_for_follow = {
+            "profileNickname": "NONE",
             "profileImgPath": "https://cdn-contents.weverse.io/static/profile/profile_defalut_img_05.png"
-        })
+        }
         self.loop = loop
         super().__init__(**kwargs)
 
@@ -435,6 +434,15 @@ class WeverseClientAsync(WeverseClient):
                 data = await resp.json()
                 return create_announcement_object(data)
 
+    @staticmethod
+    def __generate_random_nickname():
+        from random import randint
+        nickname_length = randint(10, 20)
+        nickname = ""
+        for i in range(0, nickname_length + 1):
+            nickname += chr(randint(0, 255))
+        return nickname
+
     @check_expired_token
     async def follow_community(self, community_id: Union[int, str]):
         r"""
@@ -444,6 +452,7 @@ class WeverseClientAsync(WeverseClient):
             The community ID to follow.
         """
         url = self._api_communities_url + str(community_id)
+        self._request_payload_for_follow['profileNickname'] = self.__generate_random_nickname()
 
         async with self.web_session.put(url, headers=self._headers, data=self._request_payload_for_follow) as resp:
             if self.check_status(resp.status, url):
