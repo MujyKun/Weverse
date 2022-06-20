@@ -179,11 +179,11 @@ def create_video_objects(current_videos: list) -> list:
     if current_videos:
         for video in current_videos:
             kwargs = {
-                'video_url': video.get('id'),
-                'thumbnail_url': video.get('contentIndex'),
-                'thumbnail_width': video.get('thumbnailImgUrl'),
-                'thumbnail_height': video.get('thumbnailImgWidth'),
-                'length': video.get('thumbnailImgHeight'),
+                'video_url': video.get('videoUrl'),
+                'thumbnail_url': video.get('thumbnailUrl'),
+                'thumbnail_width': video.get('thumbnailWidth'),
+                'thumbnail_height': video.get('thumbnailHeight'),
+                'playtime': video.get('playTime'),
             }
             video_obj = Video(**kwargs)
             videos.append(video_obj)
