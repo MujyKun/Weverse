@@ -7,6 +7,7 @@ from .models import Community, Post as w_Post, Notification, Announcement, Media
 from . import WeverseClient, create_post_objects, create_community_objects, create_notification_objects, \
     create_comment_objects, create_media_object, iterate_community_media_categories, create_announcement_object, \
     InvalidCredentials, LoginFailed, InvalidToken, NoHookFound, check_expired_token
+from json import dumps as dumps_
 
 
 class WeverseClientAsync(WeverseClient):
@@ -444,17 +445,22 @@ class WeverseClientAsync(WeverseClient):
         return nickname
 
     @check_expired_token
-    async def follow_community(self, community_id: Union[int, str]):
+    async def follow_community(self, community_id: Union[int, str], attempts: int = 0):
         r"""
         Follow a community
 
         :param community_id: Union[int, str]
             The community ID to follow.
+        :param attempts: int
+            The number of attempts for choosing a nickname after error.
+
         """
         url = self._api_communities_url + str(community_id)
         self._request_payload_for_follow['profileNickname'] = self.__generate_random_nickname()
-
-        async with self.web_session.put(url, headers=self._headers, data=self._request_payload_for_follow) as resp:
+        async with self.web_session.put(url, headers=self._headers, data=dumps_(self._request_payload_for_follow)) as \
+                resp:
+            if resp.status == 400 and attempts < 1:
+                return await self.follow_all_communities(community_id, attempts + 1)
             if self.check_status(resp.status, url):
                 if self.verbose:
                     print(f"Followed {community_id}.")
