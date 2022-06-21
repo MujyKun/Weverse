@@ -462,7 +462,7 @@ class WeverseClientAsync(WeverseClient):
         async with self.web_session.put(url, headers=_headers, data=dumps_(self._request_payload_for_follow)) as \
                 resp:
             if resp.status == 400 and attempts < 1:
-                return await self.follow_all_communities(community_id, attempts + 1)
+                return await self.follow_community(community_id, attempts + 1)
             if self.check_status(resp.status, url):
                 if self.verbose:
                     print(f"Followed {community_id}.")
