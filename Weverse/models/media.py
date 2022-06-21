@@ -102,5 +102,6 @@ class Media:
         return f"{self.body}"
 
     def __len__(self):
-        """Returns the amount of images (not videos) available."""
-        return len(self.photos)
+        """Returns the amount of images available. If there are no images,
+        will return if there is a video link or body message."""
+        return len(self.photos) or self.video_link or self.body
