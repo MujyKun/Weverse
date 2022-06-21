@@ -167,4 +167,4 @@ class Post:
 
     def __len__(self):
         """Returns the amount of images (not videos) available."""
-        return len(self.photos) or len(self.videos)
+        return len(self.photos) or len(self.videos) or len(self.body)
