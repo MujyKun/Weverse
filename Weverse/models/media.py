@@ -21,10 +21,6 @@ class Media:
 
             Checks if two Media objects do not have the same ID.
 
-        .. describe:: len(x)
-
-            Returns the amount of images (not videos) in the Media object.
-
     Parameters
     ----------
     id: int
@@ -96,7 +92,3 @@ class Media:
         """Check if the IDs of the Media objects are not equal."""
         return not self == other
 
-    def __len__(self):
-        """Returns the amount of images available. If there are no images,
-        will return if there is a video link or body message."""
-        return len(self.photos) or self.video_link or self.body
