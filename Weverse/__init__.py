@@ -5,12 +5,12 @@ from . import models
 from .error import InvalidToken, PageNotFound, BeingRateLimited, LoginFailed, InvalidCredentials, NoHookFound
 from .objects import create_tab_objects, create_community_objects, create_comment_objects, create_notification_objects,\
     create_media_object, create_post_objects, create_artist_objects, create_photo_objects, \
-    iterate_community_media_categories, create_announcement_object
+    iterate_community_media_categories, create_announcement_object, create_video_objects
 
 __title__ = 'Weverse'
 __author__ = 'MujyKun'
 __license__ = 'MIT'
-__version__ = '1.1.2'
+__version__ = '1.1.3'
 
 
 def check_expired_token(func):

@@ -1,14 +1,20 @@
 import asyncio
+import concurrent.futures
+import functools
+import os
 from typing import Optional, List, Union
-
+from os import system as terminal
 import aiohttp
+import aiofiles
 from asyncio import get_event_loop
-from .models import Community, Post as w_Post, Notification, Announcement, Media
+from .models import Community, Post as w_Post, Notification, Announcement, Media, VideoStream
 from . import WeverseClient, create_post_objects, create_community_objects, create_notification_objects, \
     create_comment_objects, create_media_object, iterate_community_media_categories, create_announcement_object, \
-    InvalidCredentials, LoginFailed, InvalidToken, NoHookFound, check_expired_token
+    InvalidCredentials, LoginFailed, InvalidToken, NoHookFound, check_expired_token, create_video_objects
 from json import dumps as dumps_
 
+
+VERBOSE = False
 
 class WeverseClientAsync(WeverseClient):
     r"""
@@ -38,7 +44,13 @@ class WeverseClientAsync(WeverseClient):
             "profileImgPath": "https://cdn-contents.weverse.io/static/profile/profile_defalut_img_05.png"
         }
         self.loop = loop
+        self._cookies: Optional[dict] = None
+        self.__cookies_test_url = "https://weversewebapi.weverse.io/wapi/v1/communities/2/videos/4093"
         super().__init__(**kwargs)
+
+        if self.verbose:
+            global VERBOSE
+            VERBOSE = self.verbose
 
     async def start(self, create_old_posts=False, create_notifications=True, create_media=False,
                     follow_new_communities=True):
@@ -470,7 +482,8 @@ class WeverseClientAsync(WeverseClient):
     @check_expired_token
     async def follow_all_communities(self):
         r"""Follow all communities on Weverse"""
-        communities_to_follow = [community_id for community_id in await self.get_all_community_ids() if community_id not in
+        communities_to_follow = [community_id for community_id in await self.get_all_community_ids() if
+                                 community_id not in
                                  self.all_communities]
         for community_id in communities_to_follow:
             await self.follow_community(community_id)
@@ -561,3 +574,149 @@ class WeverseClientAsync(WeverseClient):
         async with self.web_session.get(url=self._user_endpoint, headers=self._headers) as resp:
             self._expired_token = not resp.status == 200
             return not self._expired_token
+
+    @property
+    async def cookies(self) -> Optional[dict]:
+        """Get the user's cookies in order to access media."""
+        if self._cookies:
+            return self._cookies
+        else:
+            return await self.get_cookies(video_url_without_drm_type=self.__cookies_test_url)
+
+    async def get_cookies(self, video_url_without_drm_type) -> Optional[dict]:
+        """Get the user's cookies in order to access media.
+
+        :param video_url_without_drm_type:
+            EX: https://weversewebapi.weverse.io/wapi/v1/communities/2/videos/4093
+
+        :returns: Optional[dict]
+            A dictionary containing a signed cookie.
+        """
+
+        if not self._cookies:
+            url = video_url_without_drm_type + '?drmType=Widevine'
+            async with self.web_session.get(url=url, headers=self._headers) as resp:
+                if self.check_status(resp.status, url):
+                    data = await resp.json()
+                    self._cookies = data['signedCookie']
+        return self._cookies
+
+    async def download_video_stream(self, video_stream_obj: VideoStream, output_file_path):
+        """
+        Download a video stream to a local folder.
+
+        Parameters
+        ----------
+        video_stream_obj: :ref:`VideoStream`
+        output_file_path: str
+            Full file path with file extension.
+
+        Returns
+        -------
+        Returns False if no community id is found with the :ref:`VideoStream` object.
+        """
+        if not video_stream_obj.community_id:
+            return False
+
+        url = f"{self._api_communities_url}{video_stream_obj.community_id}/videos/{video_stream_obj.video_id}"
+        cookies = await self.get_cookies(url)
+        self._headers['cookie'] = cookies
+        for m3u8_url in video_stream_obj.m3u8_urls:
+            async with self.web_session.get(url=m3u8_url,
+                                            headers=self._headers) as resp:
+                if not self.check_status(resp.status, m3u8_url):
+                    continue
+
+                data_bytes_string = await resp.read()
+                data_string = data_bytes_string.decode('ascii')
+                lines = data_string.split("\n")
+                ts_file_names = [line for line in lines if line.endswith('.ts')]
+                ts_file_urls = [f"{video_stream_obj.base_url}{ts_file_name}" for ts_file_name in ts_file_names]
+                ts_file_paths = [f"./{ts_file_name}" for ts_file_name in ts_file_names]
+                downloaded_list = await self._download_ts_files(ts_file_urls, ts_file_paths)
+                concat_files_syntax = '|'.join(downloaded_list)
+                ffmpeg_concat_protocol = f'ffmpeg -i "concat:{concat_files_syntax}" -c copy {output_file_path}'
+                await self.run_blocking_code(self._run_in_terminal, ffmpeg_concat_protocol)
+                await self.run_blocking_code(self._remove_files, downloaded_list)
+                break  # we have our output file for highest quality found.
+
+    async def _download_ts_files(self, urls, file_paths) -> List[str]:
+        """
+        Download TS files.
+
+        Parameters
+        ----------
+        urls: List[str]
+            A list of links. MUST equal the length of file paths.
+        file_paths: List[str]
+            File paths to download. MUST equal the length of urls.
+
+        :returns: List[str]
+            Returns a list of downloaded file paths.
+
+        """
+        downloaded_files = []
+        for idx, url in enumerate(urls):
+            async with self.web_session.get(url, headers=self._headers) as resp:
+                if self.check_status(resp.status, url):
+                    async with aiofiles.open(file_paths[idx], mode='wb') as file:
+                        await file.write(await resp.read())
+                        downloaded_files.append(file_paths[idx])
+        return downloaded_files
+
+    async def run_blocking_code(self, funcs, *args, **kwargs) -> list:
+        """Run blocking code safely in a new thread.
+        DO NOT pass in an asynchronous function. If an asynchronous function has blocking code, the event loop will
+        also block. There were several attempts made to make it compatible with asynchronous functions, but it was a
+        headache to work with.
+
+        :param funcs: The blocking function that needs to be called.
+            May also pass in a list of functions
+            with the 0th index as the callable function,
+            the 1st index as the args for that function,
+            and the 2nd index as the kwargs for that function.
+        :param args: The args to pass into the blocking function.
+        :param kwargs: The keyword args to pass into the blocking function.
+        :returns: List of results in no particular order. Make sure the output can be managed with no specific order.
+        """
+        loop = asyncio.get_running_loop()
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
+                results = []  # a list of results
+                if not isinstance(funcs, list):
+                    funcs = [[funcs, args, kwargs]]
+
+                for func in funcs:
+                    callable_function = func[0]
+                    func_args = func[1]
+                    func_kwargs = func[2]
+                    if callable(callable_function):
+                        results.append(await loop.run_in_executor(pool, functools.partial(callable_function,
+                                                                                          *func_args, **func_kwargs)))
+                return results
+        except Exception as e:
+            if self.verbose:
+                print(f"Exception - {e} - {func} - {args} - {kwargs}")
+        return []
+
+    @staticmethod
+    def _run_in_terminal(command):
+        """Run a command in the terminal. Will Block unless executed from :ref:`run_blocking_code`"""
+        terminal(command)
+
+    @staticmethod
+    def _remove_files(file_paths: List[str]):
+        """
+        Removes a list of files. Will Block unless executed from :ref:`run_blocking_code`
+
+        Parameters
+        ----------
+        file_paths: List[str]
+            A list of full file paths
+        """
+        for file_path in file_paths:
+            try:
+                os.unlink(file_path)
+            except Exception as e:
+                if VERBOSE:
+                    print(f"{file_path} could not be unlinked. - {e}")

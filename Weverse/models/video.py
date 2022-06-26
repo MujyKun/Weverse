@@ -1,4 +1,5 @@
 from typing import Optional, TYPE_CHECKING
+import aiohttp
 
 if TYPE_CHECKING:
     from Weverse.models import Post
@@ -67,6 +68,7 @@ class Video:
         self.thumbnail_height = kwargs.get('thumbnail_height')
         self.length = kwargs.get('playtime')
         self.post: Optional[Post] = None
+        self.community_id: Optional[int] = kwargs.get('community_id')
 
     def __eq__(self, other):
         """Check if the Video URL and Post are the same."""
@@ -89,3 +91,23 @@ class Video:
     def __len__(self):
         """Returns the length of the video in seconds."""
         return self.length
+
+
+class VideoStream(Video):
+    def __init__(self, **kwargs):
+        super(VideoStream, self).__init__(**kwargs)
+        self.hlsPath = kwargs.get('hlsPath')
+        self.dashPath = kwargs.get('dashPath')
+        self.content_index = kwargs.get("content_index")
+        self.video_id = kwargs.get("video_id")
+        self.encoding_status = kwargs.get("encoding_status")
+        self.type = kwargs.get("type")
+        self.video_width = kwargs.get("video_width")
+        self.video_height = kwargs.get("video_height")
+        self.is_vertical = kwargs.get("is_vertical")
+        self.caption_s3_paths = kwargs.get("caption_s3_paths")
+        self.level = kwargs.get("level")
+        self.hls_path = kwargs.get("hls_path")
+        self.dash_path = kwargs.get("dash_path")
+        self.base_url = self.hls_path.replace("HLS.m3u8", "")
+        self.m3u8_urls = [f"{self.base_url}HLS_{resolution}.m3u8" for resolution in [2560, 1440, 1080, 720, 540, 360]]

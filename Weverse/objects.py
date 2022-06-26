@@ -1,6 +1,7 @@
 from typing import List, Dict
 
-from .models import Community, Artist, Tab, Notification, Post, Photo, Comment, Media, Video, Announcement
+from .models import Community, Artist, Tab, Notification, Post, Photo, Comment, Media, Video, Announcement, \
+    VideoStream
 
 
 def create_community_objects(current_communities: list, already_existing: Dict[int, Community] = None) -> dict:
@@ -131,7 +132,7 @@ def create_post_objects(current_posts: list, community: Community, new=False) ->
         for post in current_posts:
             artist_comments = create_comment_objects(post.get('artistComments'))
             artist_photos = create_photo_objects(post.get('photos'))
-            artist_videos = create_video_objects(post.get('attachedVideos'))
+            artist_videos = create_video_objects(post.get('attachedVideos'), community.id)
             artist_info = post.get('communityUser')
             community_artist_id = artist_info.get('id')
             kwargs = {
@@ -176,23 +177,40 @@ def create_post_objects(current_posts: list, community: Community, new=False) ->
     return posts
 
 
-def create_video_objects(current_videos: list) -> list:
+def create_video_objects(current_videos: list, community_id=None) -> list:
     """Creates & Returns video objects based on a list of videos.
 
     :param current_videos: Video information from api endpoint.
+    :param community_id: Community ID
     :returns: List[:ref:`Video`]
     """
     videos = []
     if current_videos:
         for video in current_videos:
             kwargs = {
+                'community_id': community_id,
                 'video_url': video.get('videoUrl'),
                 'thumbnail_url': video.get('thumbnailUrl'),
                 'thumbnail_width': video.get('thumbnailWidth'),
                 'thumbnail_height': video.get('thumbnailHeight'),
                 'playtime': video.get('playTime'),
+                'content_index': video.get('contentIndex'),
+                'video_id': video.get('id'),
+                'encoding_status': video.get('status'),
+                'type': video.get('type'),
+                'video_width': video.get("videoWidth"),
+                'video_height': video.get('videoHeight'),
+                'is_vertical': video.get("isVertical"),
+                "caption_s3_paths": video.get("captionS3Paths"),
+                "level": video.get("community"),
+                "hls_path": video.get("hlsPath"),
+                "dash_path": video.get("dashPath")
             }
-            video_obj = Video(**kwargs)
+
+            if kwargs["hls_path"] is not None:
+                video_obj = VideoStream(**kwargs)
+            else:
+                video_obj = Video(**kwargs)
             videos.append(video_obj)
     return videos
 
@@ -258,11 +276,13 @@ def create_announcement_object(announcement_info: dict) -> Announcement:
     return Announcement(**announcement_info)
 
 
-def create_media_object(media_info: dict, ignore_photos=False) -> Media:
+def create_media_object(media_info: dict, ignore_photos=False, ignore_videos=False) -> Media:
     """Creates and returns a media object
 
     :param media_info: media information from endpoint.
     :param ignore_photos: Whether to ignore the photos that belong in the media object. (Other methods can
+        create it themselves.)
+    :param ignore_videos: Whether to ignore the videos that belong in the media object. (Other methods can
         create it themselves.)
     :returns: :ref:`Media`
     """
@@ -272,8 +292,13 @@ def create_media_object(media_info: dict, ignore_photos=False) -> Media:
         if photos:
             media_info["photo_objects"] = create_photo_objects(photos)
 
-    return Media(**media_info)
+    if media_info.get("type") == "VIDEO" and not ignore_videos:
+        video = media_info.get("video")
 
+        if video:
+            media_info["video_objects"] = create_video_objects(video, media_info.get("communityId"))
+
+    return Media(**media_info)
 
 
 def iterate_community_media_categories(all_media_categories: dict) -> [List[Media], List[dict]]:
