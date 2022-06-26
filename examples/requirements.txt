@@ -1,2 +1,2 @@
-weverse>=1.1.5
+weverse>=1.1.6
 python-dotenv~=0.18.0
