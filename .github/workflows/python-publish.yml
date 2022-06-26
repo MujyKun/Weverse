@@ -10,7 +10,7 @@ name: Upload Python Package
 
 on:
   release:
-    types: [published, edited]
+    types: [published]
 
 permissions:
   contents: read
@@ -34,7 +34,7 @@ jobs:
       run: python setup.py sdist bdist_wheel
 
     - name: Publish package
-      run: twine upload dist/*
+      uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
       with:
         user: MujyKun
         password: ${{ secrets.PYPI_API_TOKEN }}
