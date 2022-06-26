@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Union
 
-from . import Photo
+from . import Photo, Video, VideoStream
 
 
 class Media:
@@ -20,10 +20,6 @@ class Media:
         .. describe:: x != y
 
             Checks if two Media objects do not have the same ID.
-
-        .. describe:: str(x)
-
-            Returns the Media body message.
 
         .. describe:: len(x)
 
@@ -73,6 +69,8 @@ class Media:
         The youtube video ID.
     photos: List[:ref:`Photo`]
         A list of photos under the media post.
+    videos: List[:ref:`Video`]
+        A list of videos under the media post.
     """
     def __init__(self, **kwargs):
         self.id = kwargs.get('id')
@@ -85,6 +83,7 @@ class Media:
         self.video_link = kwargs.get('extVideoPath')
         self.youtube_id = kwargs.get('youtubeId')
         self.photos: List[Photo] = kwargs.get('photo_objects') or []
+        self.videos: Union[Video, VideoStream] = kwargs.get('video_objects') or []
 
     def __eq__(self, other):
         """Check if the IDs of the Media objects are equal."""
@@ -96,10 +95,6 @@ class Media:
     def __ne__(self, other):
         """Check if the IDs of the Media objects are not equal."""
         return not self == other
-
-    def __str__(self):
-        """Returns the Media body message."""
-        return f"{self.body}"
 
     def __len__(self):
         """Returns the amount of images available. If there are no images,
