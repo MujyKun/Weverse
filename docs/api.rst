@@ -57,7 +57,7 @@ Video
 ===========
 VideoStream
 ===========
-..autoclass:: Weverse.models.VideoStream
+.. autoclass:: Weverse.models.VideoStream
     :members:
 
 ======
