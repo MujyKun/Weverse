@@ -128,8 +128,8 @@ class VideoStream(Video):
     """
     def __init__(self, **kwargs):
         super(VideoStream, self).__init__(**kwargs)
-        self.hls_path = kwargs.get('hlsPath')
-        self.dash_path = kwargs.get('dashPath')
+        self.hls_path = kwargs.get('hls_path')
+        self.dash_path = kwargs.get('dash_path')
         self.content_index = kwargs.get("content_index")
         self.video_id = kwargs.get("video_id")
         self.encoding_status = kwargs.get("encoding_status")

@@ -296,7 +296,7 @@ def create_media_object(media_info: dict, ignore_photos=False, ignore_videos=Fal
         video = media_info.get("video")
 
         if video:
-            media_info["video_objects"] = create_video_objects(video, media_info.get("communityId"))
+            media_info["video_objects"] = create_video_objects([video], media_info.get("communityId"))
 
     return Media(**media_info)
 
