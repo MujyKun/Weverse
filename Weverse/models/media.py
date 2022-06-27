@@ -79,7 +79,7 @@ class Media:
         self.video_link = kwargs.get('extVideoPath')
         self.youtube_id = kwargs.get('youtubeId')
         self.photos: List[Photo] = kwargs.get('photo_objects') or []
-        self.videos: Union[Video, VideoStream] = kwargs.get('video_objects') or []
+        self.videos: List[Union[Video, VideoStream]] = kwargs.get('video_objects') or []
 
     def __eq__(self, other):
         """Check if the IDs of the Media objects are equal."""

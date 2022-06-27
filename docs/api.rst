@@ -54,6 +54,12 @@ Video
 .. autoclass:: Weverse.models.Video
     :members:
 
+===========
+VideoStream
+===========
+..autoclass:: Weverse.models.VideoStream
+    :members:
+
 ======
 Artist
 ======

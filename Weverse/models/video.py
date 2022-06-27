@@ -94,10 +94,42 @@ class Video:
 
 
 class VideoStream(Video):
+    """
+    A video stream that inherits from :ref:`Video`
+
+    Attributes
+    ----------
+    hls_path: str
+        Link to the .m3u8 file.
+    dash_path: str
+        Link to the .mpd file.
+    content_index: int
+        Index of the videos.
+    video_id: int
+        Unique Video ID
+    encoding_status: str
+        Encoding Status of the Video Stream.
+    type: str
+        The type of video it is.
+    video_width: int
+        The width of the video
+    video_height: int
+        The height of the video
+    is_vertical: bool
+        If the video is vertical.
+    caption_s3_paths: List[str]
+        A list of caption paths.
+    level: str
+        The users that are able to view the video.
+    base_url: str
+        The base url of the video to access files.
+    m3u8_urls: str
+        Several urls for the resolution m3u8 files.
+    """
     def __init__(self, **kwargs):
         super(VideoStream, self).__init__(**kwargs)
-        self.hlsPath = kwargs.get('hlsPath')
-        self.dashPath = kwargs.get('dashPath')
+        self.hls_path = kwargs.get('hlsPath')
+        self.dash_path = kwargs.get('dashPath')
         self.content_index = kwargs.get("content_index")
         self.video_id = kwargs.get("video_id")
         self.encoding_status = kwargs.get("encoding_status")
@@ -107,7 +139,5 @@ class VideoStream(Video):
         self.is_vertical = kwargs.get("is_vertical")
         self.caption_s3_paths = kwargs.get("caption_s3_paths")
         self.level = kwargs.get("level")
-        self.hls_path = kwargs.get("hls_path")
-        self.dash_path = kwargs.get("dash_path")
         self.base_url = self.hls_path.replace("HLS.m3u8", "")
         self.m3u8_urls = [f"{self.base_url}HLS_{resolution}.m3u8" for resolution in [2560, 1440, 1080, 720, 540, 360]]
