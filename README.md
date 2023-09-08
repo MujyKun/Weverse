@@ -1,10 +1,13 @@
 ## Weverse
 
+
+| :exclamation:  This project is no longer being maintained after Naver has acquired Weverse. They completely switched their API, and I do not have the time to make another wrapper.  :exclamation:  |
+|-----------------------------------------|
+
+
 ### What is it?
 Weverse creates internal cache for the communities a user follows on [weverse.io](https://www.weverse.io/).  
 This is a **wrapper** for Weverse's private API, but may be referred to as an API on this repository.
-
-
 
 ### **[API Documentation](https://weverse.readthedocs.io/en/latest/)**
 
